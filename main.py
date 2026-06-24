@@ -403,7 +403,6 @@ def ask_review_rating(call):
     bot.delete_message(call.message.chat.id, call.message.message_id)
     
     user_review_state[call.message.chat.id] = section_key
-    user_rating_state[call.message.chat.id] = section_key
     
     kb = types.InlineKeyboardMarkup(row_width=5)
     buttons = [types.InlineKeyboardButton(str(i), callback_data=f'review_rate_{section_key}_{i}') for i in range(1, 6)]
@@ -412,7 +411,7 @@ def ask_review_rating(call):
     
     bot.send_message(
         call.message.chat.id,
-        '⭐ Сначала оцените секцию (1-5):',
+        '⭐ Оцените секцию (1-5):',
         reply_markup=kb
     )
 
@@ -422,10 +421,10 @@ def ask_review_text(call):
     section_key = parts[2]
     rating = int(parts[3])
     
-    user_rating_state[call.message.chat.id] = section_key
-    user_review_state[call.message.chat.id] = rating
-    
     bot.delete_message(call.message.chat.id, call.message.message_id)
+    
+    user_rating_state[call.message.chat.id] = rating
+    user_review_state[call.message.chat.id] = section_key
     
     kb = types.InlineKeyboardMarkup()
     kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_rating_{section_key}'))
@@ -460,14 +459,14 @@ def cancel_review_full(call):
     
     bot.delete_message(chat_id, call.message.message_id)
     
-    section_key = user_rating_state.get(chat_id) or user_review_state.get(chat_id)
+    section_key = user_review_state.get(chat_id)
     
     if chat_id in user_review_state:
         del user_review_state[chat_id]
     if chat_id in user_rating_state:
         del user_rating_state[chat_id]
     
-    if section_key and section_key != 0:
+    if section_key:
         text = get_section_card_text(section_key)
         bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
     else:
