@@ -145,17 +145,23 @@ def save_review_to_db(section_key, user_id, rating, comment):
     
     cur.execute("SELECT id FROM reviews WHERE section_key = ? AND user_id = ?", (section_key, user_id))
     existing = cur.fetchone()
-    if existing:
-        conn.close()
-        return 'duplicate'
     
-    cur.execute(
-        "INSERT INTO reviews (section_key, user_id, rating, comment) VALUES (?, ?, ?, ?)",
-        (section_key, user_id, rating, comment)
-    )
-    conn.commit()
-    conn.close()
-    return True
+    if existing:
+        cur.execute(
+            "UPDATE reviews SET rating = ?, comment = ? WHERE section_key = ? AND user_id = ?",
+            (rating, comment, section_key, user_id)
+        )
+        conn.commit()
+        conn.close()
+        return 'updated'
+    else:
+        cur.execute(
+            "INSERT INTO reviews (section_key, user_id, rating, comment) VALUES (?, ?, ?, ?)",
+            (section_key, user_id, rating, comment)
+        )
+        conn.commit()
+        conn.close()
+        return True
 
 def get_reviews(section_key):
     conn = get_db_connection()
@@ -403,6 +409,7 @@ def ask_review_rating(call):
     bot.delete_message(call.message.chat.id, call.message.message_id)
     
     user_review_state[call.message.chat.id] = section_key
+    user_rating_state[call.message.chat.id] = section_key
     
     kb = types.InlineKeyboardMarkup(row_width=5)
     buttons = [types.InlineKeyboardButton(str(i), callback_data=f'review_rate_{section_key}_{i}') for i in range(1, 6)]
@@ -411,7 +418,7 @@ def ask_review_rating(call):
     
     bot.send_message(
         call.message.chat.id,
-        '⭐ Оцените секцию (1-5):',
+        '⭐ Сначала оцените секцию (1-5):',
         reply_markup=kb
     )
 
@@ -421,10 +428,10 @@ def ask_review_text(call):
     section_key = parts[2]
     rating = int(parts[3])
     
-    bot.delete_message(call.message.chat.id, call.message.message_id)
+    user_rating_state[call.message.chat.id] = section_key
+    user_review_state[call.message.chat.id] = rating
     
-    user_rating_state[call.message.chat.id] = rating
-    user_review_state[call.message.chat.id] = section_key
+    bot.delete_message(call.message.chat.id, call.message.message_id)
     
     kb = types.InlineKeyboardMarkup()
     kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_rating_{section_key}'))
@@ -455,18 +462,17 @@ def back_to_rating(call):
 
 @bot.callback_query_handler(func=lambda call: call.data == 'cancel_review_full')
 def cancel_review_full(call):
-    chat_id = call.message.chat.id
-    
+    chat_id = call.message.chat.id    
     bot.delete_message(chat_id, call.message.message_id)
     
-    section_key = user_review_state.get(chat_id)
+    section_key = user_rating_state.get(chat_id) or user_review_state.get(chat_id)
     
     if chat_id in user_review_state:
         del user_review_state[chat_id]
     if chat_id in user_rating_state:
         del user_rating_state[chat_id]
     
-    if section_key:
+    if section_key and section_key != 0:
         text = get_section_card_text(section_key)
         bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
     else:
@@ -491,7 +497,9 @@ def save_full_review(message, section_key, rating):
     if message.chat.id in user_rating_state:
         del user_rating_state[message.chat.id]
     
-    if result == 'duplicate':
+    if result == 'updated':
+        text = f'✅ Ваш отзыв обновлён! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
+    elif result == 'duplicate':
         text = f'⚠️ Вы уже оставляли отзыв на эту секцию!\n\n{get_section_card_text(section_key)}'
     else:
         text = f'✅ Спасибо за ваш отзыв! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
