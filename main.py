@@ -66,7 +66,6 @@ def add_default_sections():
     conn = get_db_connection()
     cur = conn.cursor()
     
-    # Проверяем, есть ли секции
     cur.execute("SELECT COUNT(*) FROM sections")
     count = cur.fetchone()[0]
     
@@ -239,12 +238,11 @@ def get_section_card_text(section_key):
 
 def section_keyboard(section_key):
     kb = types.InlineKeyboardMarkup(row_width=1)
-    btn1 = types.InlineKeyboardButton(text='⭐ Оценить (1-5)', callback_data=f'rate_{section_key}')
-    btn2 = types.InlineKeyboardButton(text='📝 Оставить отзыв', callback_data=f'review_{section_key}')
-    btn3 = types.InlineKeyboardButton(text='📖 Все отзывы', callback_data=f'view_reviews_{section_key}')
-    btn4 = types.InlineKeyboardButton(text='🗺️ Показать на карте', callback_data=f'map_{section_key}')
-    btn5 = types.InlineKeyboardButton(text='🔙 Назад к списку', callback_data=f'back_to_list_{section_key}')
-    kb.add(btn1, btn2, btn3, btn4, btn5)
+    btn1 = types.InlineKeyboardButton(text='📝 Оставить отзыв', callback_data=f'review_{section_key}')
+    btn2 = types.InlineKeyboardButton(text='📖 Все отзывы', callback_data=f'view_reviews_{section_key}')
+    btn3 = types.InlineKeyboardButton(text='🗺️ Показать на карте', callback_data=f'map_{section_key}')
+    btn4 = types.InlineKeyboardButton(text='🔙 Назад к списку', callback_data=f'back_to_list_{section_key}')
+    kb.add(btn1, btn2, btn3, btn4)
     return kb
 
 def location_keyboard_with_back_to_card(section_key):
@@ -264,7 +262,7 @@ def start(message):
     kb.add(btn1, btn2, btn3, btn4, btn5)
     bot.send_message(message.chat.id, '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>', parse_mode='html', reply_markup=kb)
 
-# ==== ВСЕ ОБРАБОТЧИКИ (ТЕ ЖЕ, ЧТО И РАНЬШЕ) ====
+# ==== ФУНКЦИИ ДЛЯ ПОКАЗА СПИСКОВ ШКОЛ ====
 
 def show_football_list(chat_id, message_id=None):
     kb = types.InlineKeyboardMarkup(row_width=1)
@@ -324,6 +322,8 @@ def show_boxing_list(chat_id, message_id=None):
         bot.edit_message_text('🥊 <b>Выбери школу бокса:</b>', chat_id, message_id, parse_mode='html', reply_markup=kb)
     else:
         bot.send_message(chat_id, '🥊 <b>Выбери школу бокса:</b>', parse_mode='html', reply_markup=kb)
+
+# ==================== ОБРАБОТЧИКИ ====================
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('map_'))
 def send_location(call):
@@ -394,62 +394,88 @@ def back_to_main(call):
         del user_location_data[call.message.chat.id]
     start(call.message)
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('rate_'))
-def handle_rating(call):
+# ==================== ЕДИНЫЙ ОТЗЫВ (ОЦЕНКА + ТЕКСТ) ====================
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('review_'))
+def ask_review_rating(call):
     section_key = call.data.split('_', 1)[1]
-    user_rating_state[call.message.chat.id] = section_key
-    kb = types.InlineKeyboardMarkup(row_width=5)
-    buttons = [types.InlineKeyboardButton(str(i), callback_data=f'setrate_{section_key}_{i}') for i in range(1, 6)]
-    kb.add(*buttons)
-    kb.add(types.InlineKeyboardButton('❌ Отмена', callback_data='cancel_rate'))
-    bot.edit_message_text('⭐ Оцените секцию (1-5):', call.message.chat.id, call.message.message_id, reply_markup=kb)
-
-@bot.callback_query_handler(func=lambda call: call.data.startswith('setrate_'))
-def set_rating(call):
-    parts = call.data.split('_')
-    section_key = '_'.join(parts[1:-1])
-    rating = int(parts[-1])
-    result = save_review_to_db(section_key, call.from_user.id, rating, '')
+    
     bot.delete_message(call.message.chat.id, call.message.message_id)
-    if result == 'duplicate':
-        text = f'⚠️ Вы уже оценили эту секцию!\n\n{get_section_card_text(section_key)}'
-    else:
-        text = f'✅ Спасибо за оценку {rating}⭐!\n\n{get_section_card_text(section_key)}'
-    bot.send_message(call.message.chat.id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
+    
+    user_review_state[call.message.chat.id] = section_key
+    user_rating_state[call.message.chat.id] = section_key
+    
+    kb = types.InlineKeyboardMarkup(row_width=5)
+    buttons = [types.InlineKeyboardButton(str(i), callback_data=f'review_rate_{section_key}_{i}') for i in range(1, 6)]
+    kb.add(*buttons)
+    kb.add(types.InlineKeyboardButton('❌ Отмена', callback_data='cancel_review_full'))
+    
+    bot.send_message(
+        call.message.chat.id,
+        '⭐ Сначала оцените секцию (1-5):',
+        reply_markup=kb
+    )
 
-@bot.callback_query_handler(func=lambda call: call.data == 'cancel_rate')
-def cancel_rate(call):
+@bot.callback_query_handler(func=lambda call: call.data.startswith('review_rate_'))
+def ask_review_text(call):
+    parts = call.data.split('_')
+    section_key = parts[2]
+    rating = int(parts[3])
+    
+    user_rating_state[call.message.chat.id] = section_key
+    user_review_state[call.message.chat.id] = rating
+    
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+    
+    kb = types.InlineKeyboardMarkup()
+    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_rating_{section_key}'))
+    
+    msg = bot.send_message(
+        call.message.chat.id,
+        f'📝 Напишите ваш отзыв о секции:',
+        reply_markup=kb
+    )
+    bot.register_next_step_handler(msg, save_full_review, section_key, rating)
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('back_to_rating_'))
+def back_to_rating(call):
+    section_key = call.data.split('_', 3)[3]
+    
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+    
+    kb = types.InlineKeyboardMarkup(row_width=5)
+    buttons = [types.InlineKeyboardButton(str(i), callback_data=f'review_rate_{section_key}_{i}') for i in range(1, 6)]
+    kb.add(*buttons)
+    kb.add(types.InlineKeyboardButton('❌ Отмена', callback_data='cancel_review_full'))
+    
+    bot.send_message(
+        call.message.chat.id,
+        '⭐ Оцените секцию (1-5):',
+        reply_markup=kb
+    )
+
+@bot.callback_query_handler(func=lambda call: call.data == 'cancel_review_full')
+def cancel_review_full(call):
     chat_id = call.message.chat.id
+    
+    bot.delete_message(chat_id, call.message.message_id)
+    
+    section_key = user_rating_state.get(chat_id) or user_review_state.get(chat_id)
+    
+    if chat_id in user_review_state:
+        del user_review_state[chat_id]
     if chat_id in user_rating_state:
-        section_key = user_rating_state[chat_id]
         del user_rating_state[chat_id]
+    
+    if section_key and section_key != 0:
         text = get_section_card_text(section_key)
         bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
     else:
         start(call.message)
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('review_'))
-def ask_review(call):
-    section_key = call.data.split('_', 1)[1]
-    bot.delete_message(call.message.chat.id, call.message.message_id)
-    user_review_state[call.message.chat.id] = section_key
-    kb = types.InlineKeyboardMarkup()
-    kb.add(types.InlineKeyboardButton(text='🔙 Назад', callback_data=f'cancel_review_{section_key}'))
-    bot.send_message(call.message.chat.id, '📝 Напишите ваш отзыв о секции:', reply_markup=kb)
-
-@bot.callback_query_handler(func=lambda call: call.data.startswith('cancel_review_'))
-def cancel_review(call):
-    section_key = call.data.split('_', 2)[2]
-    bot.delete_message(call.message.chat.id, call.message.message_id)
-    if call.message.chat.id in user_review_state:
-        del user_review_state[call.message.chat.id]
-    text = get_section_card_text(section_key)
-    bot.send_message(call.message.chat.id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
-
-@bot.message_handler(func=lambda message: message.chat.id in user_review_state)
-def handle_review_text(message):
-    section_key = user_review_state[message.chat.id]
+def save_full_review(message, section_key, rating):
     review_text = message.text
+    
     try:
         bot.delete_message(message.chat.id, message.message_id - 1)
     except:
@@ -458,29 +484,47 @@ def handle_review_text(message):
         bot.delete_message(message.chat.id, message.message_id)
     except:
         pass
-    result = save_review_to_db(section_key, message.from_user.id, 0, review_text)
+    
+    result = save_review_to_db(section_key, message.from_user.id, rating, review_text)
+    
     if message.chat.id in user_review_state:
         del user_review_state[message.chat.id]
+    if message.chat.id in user_rating_state:
+        del user_rating_state[message.chat.id]
+    
     if result == 'duplicate':
         text = f'⚠️ Вы уже оставляли отзыв на эту секцию!\n\n{get_section_card_text(section_key)}'
     else:
-        text = f'✅ Спасибо за отзыв!\n\n{get_section_card_text(section_key)}'
-    bot.send_message(message.chat.id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
+        text = f'✅ Спасибо за ваш отзыв! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
+    
+    bot.send_message(
+        message.chat.id,
+        text,
+        parse_mode='html',
+        reply_markup=section_keyboard(section_key)
+    )
+
+# ==================== ВСЕ ОТЗЫВЫ ====================
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('view_reviews_'))
 def view_reviews(call):
     section_key = call.data.replace('view_reviews_', '')
     reviews = get_reviews(section_key)
+    
     bot.delete_message(call.message.chat.id, call.message.message_id)
+    
     if not reviews:
         text = '📖 Пока нет отзывов. Будьте первым!'
     else:
         text = '📖 <b>Отзывы:</b>\n\n'
         for rev in reviews:
             text += f'⭐ {rev["rating"]} — {rev["comment"]}\n\n'
+    
     kb = types.InlineKeyboardMarkup(row_width=1)
     kb.add(types.InlineKeyboardButton(text='🔙 Назад к карточке', callback_data=f'back_to_card_{section_key}'))
     bot.send_message(call.message.chat.id, text, parse_mode='html', reply_markup=kb)
+
+# ==================== ОСНОВНОЙ ОБРАБОТЧИК ====================
 
 @bot.callback_query_handler(func=lambda callback: callback.data)
 def check_callback_data(callback):
@@ -490,7 +534,54 @@ def check_callback_data(callback):
         elif callback.data == 'btn1_konoplev':
             text = get_section_card_text('football_konoplev')
             bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('football_konoplev'))
-        # ... все остальные обработчики (они такие же, как были)
+        elif callback.data == 'btn1_lada':
+            text = get_section_card_text('football_lada')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('football_lada'))
+        elif callback.data == 'btn1_spartak':
+            text = get_section_card_text('football_spartak')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('football_spartak'))
+        elif callback.data == 'btn1_galacticos':
+            text = get_section_card_text('football_galacticos')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('football_galacticos'))
+        elif callback.data == 'btn1_impuls':
+            text = get_section_card_text('football_impuls')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('football_impuls'))
+        elif callback.data == 'btn1_athletic':
+            text = get_section_card_text('football_athletic')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('football_athletic'))
+        elif callback.data == 'btn2':
+            show_hockey_list(callback.message.chat.id, callback.message.message_id)
+        elif callback.data == 'btn2_flypro':
+            text = get_section_card_text('hockey_flypro')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('hockey_flypro'))
+        elif callback.data == 'btn2_lada':
+            text = get_section_card_text('hockey_lada')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('hockey_lada'))
+        elif callback.data == 'btn2_volgar':
+            text = get_section_card_text('hockey_volgar')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('hockey_volgar'))
+        elif callback.data == 'btn3':
+            show_basketball_list(callback.message.chat.id, callback.message.message_id)
+        elif callback.data == 'btn3_redwings':
+            text = get_section_card_text('basketball_redwings')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('basketball_redwings'))
+        elif callback.data == 'btn3_phoenix':
+            text = get_section_card_text('basketball_phoenix')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('basketball_phoenix'))
+        elif callback.data == 'btn4':
+            show_boxing_list(callback.message.chat.id, callback.message.message_id)
+        elif callback.data == 'btn4_lotus':
+            text = get_section_card_text('boxing_lotus')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('boxing_lotus'))
+        elif callback.data == 'btn4_vlasov':
+            text = get_section_card_text('boxing_vlasov')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('boxing_vlasov'))
+        elif callback.data == 'btn4_gaidarovets':
+            text = get_section_card_text('boxing_gaidarovets')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('boxing_gaidarovets'))
+        elif callback.data == 'btn5':
+            text = get_section_card_text('handball_lada')
+            bot.edit_message_text(text, callback.message.chat.id, callback.message.message_id, parse_mode='html', reply_markup=section_keyboard('handball_lada'))
 
 @bot.message_handler(content_types=['voice', 'photo', 'video'])
 def handle_media(message):
