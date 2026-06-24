@@ -1,66 +1,145 @@
 import telebot
 from telebot import types
-import requests
 import os
+import psycopg2
+import psycopg2.extras
 
-# ==== УБИРАЕМ ПРОКСИ ====
-os.environ['NO_PROXY'] = 'api.telegram.org'
-os.environ['HTTP_PROXY'] = ''
-os.environ['HTTPS_PROXY'] = ''
+# ==== ПОДКЛЮЧЕНИЕ К БД (SUPABASE) ====
+DATABASE_URL = os.getenv('DATABASE_URL')
 
-# ==== СОЗДАЁМ БОТА ====
-bot = telebot.TeleBot('6059734363:AAEPa7yL052gvPAOQEA22EaNP-_2T2Yy7Yg')
+def get_db_connection():
+    conn = psycopg2.connect(DATABASE_URL)
+    conn.cursor_factory = psycopg2.extras.RealDictCursor
+    return conn
 
-# ==== ЧИСТИМ СЕССИЮ ОТ ПРОКСИ ====
-session = requests.Session()
-session.proxies = {}
-session.verify = True
-bot.session = session
+def init_db():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS sections (
+            id SERIAL PRIMARY KEY,
+            key TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            address TEXT,
+            phone TEXT,
+            link TEXT,
+            lat REAL,
+            lon REAL
+        )
+    ''')
+    
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            telegram_id BIGINT UNIQUE NOT NULL,
+            username TEXT,
+            first_name TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS reviews (
+            id SERIAL PRIMARY KEY,
+            section_key TEXT REFERENCES sections(key) ON DELETE CASCADE,
+            user_id BIGINT REFERENCES users(telegram_id) ON DELETE CASCADE,
+            rating INTEGER CHECK (rating >= 0 AND rating <= 5),
+            comment TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(section_key, user_id)
+        )
+    ''')
+    
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS admins (
+            id SERIAL PRIMARY KEY,
+            telegram_id BIGINT UNIQUE NOT NULL REFERENCES users(telegram_id) ON DELETE CASCADE,
+            section_key TEXT UNIQUE NOT NULL REFERENCES sections(key) ON DELETE CASCADE
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
+    print('✅ База данных инициализирована')
 
-# ДАЛЬШЕ ВЕСЬ ОСТАЛЬНОЙ КОД...
+init_db()
 
-# Глобальные словари
-user_location_data = {}
-user_review_state = {}
-user_rating_state = {}
+# ==== БОТ ====
+TOKEN = os.getenv('TELEGRAM_TOKEN', '6059734363:AAEPa7yL052gvPAOQEA22EaNP-_2T2Yy7Yg')
+bot = telebot.TeleBot(TOKEN)
 
-# ==== ВРЕМЕННОЕ ХРАНИЛИЩЕ (ПОКА БЕЗ БД) ====
-reviews_db = {
-    'football_konoplev': {'rating': 4.5, 'count': 12, 'reviews': ['Отличная академия!', 'Тренеры супер!']},
-    'football_lada': {'rating': 4.2, 'count': 8, 'reviews': ['Хорошая школа', 'Ребёнок доволен']},
-    'football_spartak': {'rating': 3.8, 'count': 5, 'reviews': ['Неплохо, но есть нюансы']},
-    'football_galacticos': {'rating': 4.0, 'count': 6, 'reviews': ['Очень круто!']},
-    'football_impuls': {'rating': 4.7, 'count': 15, 'reviews': ['Лучшая школа в городе!']},
-    'football_athletic': {'rating': 3.5, 'count': 3, 'reviews': ['Хороший коллектив']},
-    'hockey_flypro': {'rating': 4.3, 'count': 7, 'reviews': ['Отличная школа!']},
-    'hockey_lada': {'rating': 4.8, 'count': 20, 'reviews': ['Супер!']},
-    'hockey_volgar': {'rating': 4.0, 'count': 4, 'reviews': ['Хорошая школа']},
-    'basketball_redwings': {'rating': 4.1, 'count': 9, 'reviews': ['Крутые тренеры']},
-    'basketball_phoenix': {'rating': 3.9, 'count': 6, 'reviews': ['Неплохо']},
-    'boxing_lotus': {'rating': 4.6, 'count': 11, 'reviews': ['Отличный зал!']},
-    'boxing_vlasov': {'rating': 4.4, 'count': 8, 'reviews': ['Тренер профи!']},
-    'boxing_gaidarovets': {'rating': 4.2, 'count': 5, 'reviews': ['Хорошая атмосфера']},
-    'handball_lada': {'rating': 4.9, 'count': 25, 'reviews': ['Чемпионская школа!']},
-}
+# ==== ФУНКЦИИ РАБОТЫ С БД ====
 
-# ==================== КООРДИНАТЫ ДЛЯ ГЕОЛОКАЦИИ ====================
-locations = {
-    'football_konoplev': (53.4805, 49.3874),
-    'football_lada': (53.5078, 49.4203),
-    'football_spartak': (53.5142, 49.4251),
-    'football_galacticos': (53.5200, 49.4000),
-    'football_impuls': (53.4900, 49.4100),
-    'football_athletic': (53.5000, 49.4300),
-    'hockey_flypro': (53.5100, 49.4400),
-    'hockey_lada': (53.5300, 49.3800),
-    'hockey_volgar': (53.5400, 49.3600),
-    'basketball_redwings': (53.5000, 49.4500),
-    'basketball_phoenix': (53.4800, 49.4600),
-    'boxing_lotus': (53.5200, 49.3900),
-    'boxing_vlasov': (53.4900, 49.4200),
-    'boxing_gaidarovets': (53.4700, 49.4300),
-    'handball_lada': (53.5300, 49.3500),
-}
+def get_section_data(section_key):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM sections WHERE key = %s", (section_key,))
+    result = cur.fetchone()
+    conn.close()
+    return result
+
+def get_section_rating(section_key):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT COALESCE(AVG(rating), 0) as avg_rating, COUNT(*) as total_count FROM reviews WHERE section_key = %s AND rating > 0",
+        (section_key,)
+    )
+    result = cur.fetchone()
+    conn.close()
+    return {'rating': result['avg_rating'] if result else 0, 'count': result['total_count'] if result else 0}
+
+def save_review_to_db(section_key, user_id, rating, comment):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    cur.execute("SELECT id FROM reviews WHERE section_key = %s AND user_id = %s", (section_key, user_id))
+    existing = cur.fetchone()
+    if existing:
+        conn.close()
+        return 'duplicate'
+    
+    cur.execute(
+        "INSERT INTO reviews (section_key, user_id, rating, comment) VALUES (%s, %s, %s, %s)",
+        (section_key, user_id, rating, comment)
+    )
+    conn.commit()
+    conn.close()
+    return True
+
+def get_reviews(section_key):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT rating, comment, user_id, created_at FROM reviews WHERE section_key = %s ORDER BY created_at DESC LIMIT 5",
+        (section_key,)
+    )
+    results = cur.fetchall()
+    conn.close()
+    return results
+
+def get_user(telegram_id, username=None, first_name=None):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id, telegram_id FROM users WHERE telegram_id = %s", (telegram_id,))
+    user = cur.fetchone()
+    if not user:
+        cur.execute(
+            "INSERT INTO users (telegram_id, username, first_name) VALUES (%s, %s, %s)",
+            (telegram_id, username, first_name)
+        )
+        conn.commit()
+        cur.execute("SELECT id, telegram_id FROM users WHERE telegram_id = %s", (telegram_id,))
+        user = cur.fetchone()
+    conn.close()
+    return user
+
+# ==== ВРЕМЕННОЕ ХРАНИЛИЩЕ ДЛЯ ОТЗЫВОВ (НО ТЕПЕРЬ БЕРЁМ ИЗ БД) ====
+# Вместо словаря reviews_db используем функции выше
+
+# ==== КООРДИНАТЫ ДЛЯ ГЕОЛОКАЦИИ (ТЕПЕРЬ БЕРЁМ ИЗ БД) ====
+# Вместо словаря locations используем функцию get_section_data
 
 # ==================== СЛОВАРЬ С ТЕКСТАМИ СЕКЦИЙ ====================
 section_texts = {
@@ -76,18 +155,15 @@ section_texts = {
                         '📍 Цветной бульвар, 13 (Школа №82)\n📍 Тополиная, 18 (Школа №90)\n📍 Бульвар Татищева, 19 (Школа №90)\n📍 Бульвар Космонавтов, 17 (Школа №79)\n📍 40 лет Победы, 74 (Школа №70)\n📍 40 лет Победы, 86 (Школа №70)\n📞 +79608460989 +78482409350\n🔗 https://vk.com/fc.impuls'),
     'football_athletic': ('⚽️ Футбольная школа "Athletic football"',
                           '📍 Бульвар Луначарского, 11 (Школа №71)\n📍 Свердлова, 23 (Школа №61)\n📞 +79277851389 +78482326450\n🔗 https://vk.com/athletic_football'),
-
     'hockey_flypro': (
     '🏒 Хоккейная школа "Fly pro"', '📍 40 лет Победы, 14\n📞 +79276163714\n🔗 https://vk.com/flyagin_school'),
     'hockey_lada': ('🏒 Хоккейная школа "Лада"', '📍 Ботаническая, 5\n📞 +78482526840\n🔗 https://vk.com/lada.arena'),
     'hockey_volgar': ('🏒 Хоккейная школа "Волгарь"',
                       '📍 Приморский бульвар, 37\n📍 Баныкина, 9 (Стадион Кристалл)\n📞 +78482347692\n🔗 https://vk.com/volgar_tlt'),
-
     'basketball_redwings': ('🏀 Баскетбольная школа "Красные крылья"',
                             '📍 Цветной бульвар, 18 (Школа №84)\n📍 40 лет Победы, 106 (Школа №81)\n📞 +78482692388 +78482692377\n🔗 https://vk.com/tltredwings'),
     'basketball_phoenix': ('🏀 Баскетбольная школа "Феникс"',
                            '📍 Фрунзе, 2г (ТГУ)\n📍 Белорусская, 6а (ВУиТ)\n📞 +79272110533\n🔗 https://vk.com/basketboltlt'),
-
     'boxing_lotus': (
     '🥊 "Lotusport\'s club r home"', '📍 Тополиная, 18 (Школа №90)\n📞 +79277766212\n🔗 https://vk.com/lsc63'),
     'boxing_vlasov': ('🥊 "Школа бокса им. МСМК Игоря Власова"',
@@ -102,14 +178,13 @@ section_texts = {
     'boxing_school': ('🥊 "Школа бокса"',
                       '📍 Юбилейная, 81 (Школа №73)\n📍 Приморский бульвар, 37 (Волгарь)\n📞 +7848703455 +78482707450\n🔗 https://vk.com/boxingschool163'),
     'boxing_albasport': ('🥊 "Albasport"', '📍 Фермерская, 1а/1\n📞 +78482580101\n🔗 https://vk.com/albasport63'),
-
     'handball_lada': ('🤾 Гандбольный клуб "Лада"',
                       '📍 Приморский бульвар, 49 (Олимп)\n📍 Бульвар Татищева, 19\n📍 40 лет Победы, 74\n📍 Ворошилова, 21\n📞 +78482357963 +78482355394 +79277800042\n🔗 https://vk.com/public157271429'),
 }
 
 
 def format_rating(section_key):
-    data = reviews_db.get(section_key, {'rating': 0, 'count': 0})
+    data = get_section_rating(section_key)
     rating = data['rating']
     count = data['count']
     if count == 0:
@@ -121,7 +196,22 @@ def format_rating(section_key):
 # ==================== НОВАЯ ФУНКЦИЯ ДЛЯ КАРТОЧКИ ====================
 def get_section_card_text(section_key):
     """Возвращает полный текст карточки секции с рейтингом внизу"""
-    name, info = section_texts.get(section_key, ('Секция', ''))
+    section = get_section_data(section_key)
+    if not section:
+        return '❌ Секция не найдена'
+    
+    sport_icons = {
+        'football': '⚽️',
+        'hockey': '🏒',
+        'basketball': '🏀',
+        'boxing': '🥊',
+        'handball': '🤾'
+    }
+    sport = section_key.split('_')[0]
+    icon = sport_icons.get(sport, '🏆')
+    
+    name = f"{icon} {section['name']}"
+    info = f"📍 {section['address']}\n📞 {section['phone']}\n🔗 {section['link']}"
     rating_text = format_rating(section_key)
     return f'<b>{name}</b>\n\n{info}\n\n{rating_text}'
 
@@ -145,6 +235,12 @@ def location_keyboard_with_back_to_card(section_key):
 
 @bot.message_handler(commands=['start', 'back'])
 def start(message):
+    get_user(
+        message.from_user.id,
+        message.from_user.username,
+        message.from_user.first_name
+    )
+    
     kb = types.InlineKeyboardMarkup(row_width=2)
     btn1 = types.InlineKeyboardButton(text='Футбол⚽️', callback_data='btn1')
     btn2 = types.InlineKeyboardButton(text='Хоккей🏒', callback_data='btn2')
@@ -285,12 +381,10 @@ def show_boxing_list(chat_id, message_id=None):
 def send_location(call):
     chat_id = call.message.chat.id
     section_key = call.data.replace('map_', '')
-
-    bot.delete_message(chat_id, call.message.message_id)
-
-    if section_key in locations:
-        lat, lon = locations[section_key]
-        location_msg = bot.send_location(chat_id, latitude=lat, longitude=lon)
+    section = get_section_data(section_key)
+    
+    if section and section['lat'] and section['lon']:
+        location_msg = bot.send_location(chat_id, latitude=section['lat'], longitude=section['lon'])
         text_msg = bot.send_message(
             chat_id,
             '📍 <i>Нажми на точку, чтобы проложить маршрут</i>',
@@ -332,11 +426,6 @@ def back_to_card(call):
         except:
             pass
         del user_location_data[chat_id]
-
-    if section_key not in section_texts:
-        bot.send_message(chat_id, '❌ Секция не найдена')
-        start(call.message)
-        return
 
     text = get_section_card_text(section_key)
     bot.send_message(
@@ -420,15 +509,14 @@ def set_rating(call):
     section_key = '_'.join(parts[1:-1])
     rating = int(parts[-1])
 
-    data = reviews_db.get(section_key, {'rating': 0, 'count': 0, 'reviews': []})
-    total = data['rating'] * data['count'] + rating
-    data['count'] += 1
-    data['rating'] = round(total / data['count'], 1)
-    reviews_db[section_key] = data
+    result = save_review_to_db(section_key, call.from_user.id, rating, '')
 
     bot.delete_message(call.message.chat.id, call.message.message_id)
 
-    text = f'✅ Спасибо за оценку {rating}⭐!\n\n{get_section_card_text(section_key)}'
+    if result == 'duplicate':
+        text = f'⚠️ Вы уже оценили эту секцию!\n\n{get_section_card_text(section_key)}'
+    else:
+        text = f'✅ Спасибо за оценку {rating}⭐!\n\n{get_section_card_text(section_key)}'
 
     bot.send_message(
         call.message.chat.id,
@@ -512,14 +600,15 @@ def handle_review_text(message):
     except:
         pass
 
-    data = reviews_db.get(section_key, {'rating': 0, 'count': 0, 'reviews': []})
-    data['reviews'].append(review_text)
-    reviews_db[section_key] = data
+    result = save_review_to_db(section_key, message.from_user.id, 0, review_text)
 
     if message.chat.id in user_review_state:
         del user_review_state[message.chat.id]
 
-    text = f'✅ Спасибо за отзыв! ({len(data["reviews"])} всего)\n\n{get_section_card_text(section_key)}'
+    if result == 'duplicate':
+        text = f'⚠️ Вы уже оставляли отзыв на эту секцию!\n\n{get_section_card_text(section_key)}'
+    else:
+        text = f'✅ Спасибо за отзыв! ({len(get_reviews(section_key))} всего)\n\n{get_section_card_text(section_key)}'
 
     bot.send_message(
         message.chat.id,
@@ -534,9 +623,7 @@ def handle_review_text(message):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('view_reviews_'))
 def view_reviews(call):
     section_key = call.data.replace('view_reviews_', '')
-
-    data = reviews_db.get(section_key, {'reviews': []})
-    reviews = data['reviews']
+    reviews = get_reviews(section_key)
 
     bot.delete_message(call.message.chat.id, call.message.message_id)
 
@@ -544,8 +631,8 @@ def view_reviews(call):
         text = '📖 Пока нет отзывов. Будьте первым!'
     else:
         text = '📖 <b>Отзывы:</b>\n\n'
-        for i, rev in enumerate(reviews[-5:], 1):
-            text += f'{i}. {rev}\n\n'
+        for i, rev in enumerate(reviews, 1):
+            text += f'{i}. {rev["comment"]}\n\n'
 
     kb = types.InlineKeyboardMarkup(row_width=1)
     kb.add(types.InlineKeyboardButton(text='🔙 Назад к карточке', callback_data=f'back_to_card_{section_key}'))
@@ -781,4 +868,4 @@ def main(message):
 if __name__ == '__main__':
     print('🚀 Бот запущен!')
     bot.delete_webhook()
-    bot.polling(none_stop=True, timeout=120)
+    bot.polling(none_stop=True)
