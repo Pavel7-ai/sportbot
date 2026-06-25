@@ -269,7 +269,12 @@ def get_section_card_text(section_key):
     icon = sport_icons.get(sport, '🏆')
     
     name = f"{icon} {section['name']}"
-    info = f"📍 {section['address']}\n📞 {section['phone']}\n🔗 {section['link']}"
+    info = section['address']
+    # Добавляем телефон и ссылку отдельно (если есть)
+    if section['phone']:
+        info += f"\n📞 {section['phone']}"
+    if section['link']:
+        info += f"\n🔗 {section['link']}"
     rating_text = format_rating(section_key)
     return f'<b>{name}</b>\n\n{info}\n\n{rating_text}'
 
