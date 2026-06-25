@@ -111,7 +111,7 @@ def add_default_admin():
     cur = conn.cursor()
     
     # ЗДЕСЬ ВСТАВЬ СВОЙ TELEGRAM ID!
-    admin_telegram_id = 647992946  # ЗАМЕНИ НА СВОЙ ID!
+    admin_telegram_id = 647992946  # ← ЗАМЕНИ НА СВОЙ ID!
     section_key = 'football_konoplev'
     
     cur.execute("SELECT COUNT(*) FROM admins WHERE telegram_id = ?", (admin_telegram_id,))
@@ -444,7 +444,7 @@ def ask_review_rating(call):
     
     bot.send_message(
         call.message.chat.id,
-        '⭐ Сначала оцените секцию (1-5):',
+        '⭐ Оцените секцию (1-5):',
         reply_markup=kb
     )
 
@@ -454,10 +454,10 @@ def ask_review_text(call):
     section_key = parts[2]
     rating = int(parts[3])
     
-    user_rating_state[call.message.chat.id] = section_key
-    user_review_state[call.message.chat.id] = rating
-    
     bot.delete_message(call.message.chat.id, call.message.message_id)
+    
+    user_rating_state[call.message.chat.id] = rating
+    user_review_state[call.message.chat.id] = section_key
     
     kb = types.InlineKeyboardMarkup()
     kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_rating_{section_key}'))
@@ -472,33 +472,37 @@ def ask_review_text(call):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('back_to_rating_'))
 def back_to_rating(call):
     section_key = call.data.split('_', 3)[3]
+    chat_id = call.message.chat.id
     
-    bot.delete_message(call.message.chat.id, call.message.message_id)
-    
-    kb = types.InlineKeyboardMarkup(row_width=5)
-    buttons = [types.InlineKeyboardButton(str(i), callback_data=f'review_rate_{section_key}_{i}') for i in range(1, 6)]
-    kb.add(*buttons)
-    kb.add(types.InlineKeyboardButton('❌ Отмена', callback_data='cancel_review_full'))
-    
-    bot.send_message(
-        call.message.chat.id,
-        '⭐ Оцените секцию (1-5):',
-        reply_markup=kb
-    )
-
-@bot.callback_query_handler(func=lambda call: call.data == 'cancel_review_full')
-def cancel_review_full(call):
-    chat_id = call.message.chat.id    
     bot.delete_message(chat_id, call.message.message_id)
-    
-    section_key = user_rating_state.get(chat_id) or user_review_state.get(chat_id)
     
     if chat_id in user_review_state:
         del user_review_state[chat_id]
     if chat_id in user_rating_state:
         del user_rating_state[chat_id]
     
-    if section_key and section_key != 0:
+    text = get_section_card_text(section_key)
+    bot.send_message(
+        chat_id,
+        text,
+        parse_mode='html',
+        reply_markup=section_keyboard(section_key)
+    )
+
+@bot.callback_query_handler(func=lambda call: call.data == 'cancel_review_full')
+def cancel_review_full(call):
+    chat_id = call.message.chat.id
+    
+    section_key = user_review_state.get(chat_id)
+    
+    bot.delete_message(chat_id, call.message.message_id)
+    
+    if chat_id in user_review_state:
+        del user_review_state[chat_id]
+    if chat_id in user_rating_state:
+        del user_rating_state[chat_id]
+    
+    if section_key:
         text = get_section_card_text(section_key)
         bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
     else:
