@@ -2,6 +2,7 @@ import telebot
 from telebot import types
 import sqlite3
 import os
+import re
 
 # ==== ПОДКЛЮЧЕНИЕ К SQLite ====
 DB_FILE = 'sport_bot.db'
@@ -426,91 +427,62 @@ def back_to_main(call):
         del user_location_data[call.message.chat.id]
     start(call.message)
 
-# ==================== ЕДИНЫЙ ОТЗЫВ (ОЦЕНКА + ТЕКСТ) ====================
+# ==================== ОТЗЫВ (ОЦЕНКА + ТЕКСТ В ОДНОМ СООБЩЕНИИ) ====================
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('review_'))
-def ask_review_rating(call):
+def ask_review(call):
     section_key = call.data.split('_', 1)[1]
     
     bot.delete_message(call.message.chat.id, call.message.message_id)
     
     user_review_state[call.message.chat.id] = section_key
-    user_rating_state[call.message.chat.id] = section_key
-    
-    kb = types.InlineKeyboardMarkup(row_width=5)
-    buttons = [types.InlineKeyboardButton(str(i), callback_data=f'review_rate_{section_key}_{i}') for i in range(1, 6)]
-    kb.add(*buttons)
-    kb.add(types.InlineKeyboardButton('❌ Отмена', callback_data='cancel_review_full'))
-    
-    bot.send_message(
-        call.message.chat.id,
-        '⭐ Оцените секцию (1-5):',
-        reply_markup=kb
-    )
-
-@bot.callback_query_handler(func=lambda call: call.data.startswith('review_rate_'))
-def ask_review_text(call):
-    parts = call.data.split('_')
-    section_key = parts[2]
-    rating = int(parts[3])
-    
-    bot.delete_message(call.message.chat.id, call.message.message_id)
-    
-    user_rating_state[call.message.chat.id] = rating
-    user_review_state[call.message.chat.id] = section_key
     
     kb = types.InlineKeyboardMarkup()
-    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_rating_{section_key}'))
+    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'cancel_review_{section_key}'))
     
     msg = bot.send_message(
         call.message.chat.id,
-        f'📝 Напишите ваш отзыв о секции:',
+        f'📝 Напишите ваш отзыв и оценку (1-5) в одном сообщении.\n\n<b>Пример:</b> "Отличная секция! (5)"',
+        parse_mode='html',
         reply_markup=kb
     )
-    bot.register_next_step_handler(msg, save_full_review, section_key, rating)
+    bot.register_next_step_handler(msg, save_review_with_rating, section_key)
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('back_to_rating_'))
-def back_to_rating(call):
-    section_key = call.data.split('_', 3)[3]
+@bot.callback_query_handler(func=lambda call: call.data.startswith('cancel_review_'))
+def cancel_review(call):
+    section_key = call.data.split('_', 2)[2]
     chat_id = call.message.chat.id
     
     bot.delete_message(chat_id, call.message.message_id)
     
     if chat_id in user_review_state:
         del user_review_state[chat_id]
-    if chat_id in user_rating_state:
-        del user_rating_state[chat_id]
     
     text = get_section_card_text(section_key)
-    bot.send_message(
-        chat_id,
-        text,
-        parse_mode='html',
-        reply_markup=section_keyboard(section_key)
-    )
+    bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
 
-@bot.callback_query_handler(func=lambda call: call.data == 'cancel_review_full')
-def cancel_review_full(call):
-    chat_id = call.message.chat.id
+def save_review_with_rating(message, section_key):
+    text = message.text
     
-    section_key = user_review_state.get(chat_id)
-    
-    bot.delete_message(chat_id, call.message.message_id)
-    
-    if chat_id in user_review_state:
-        del user_review_state[chat_id]
-    if chat_id in user_rating_state:
-        del user_rating_state[chat_id]
-    
-    if section_key:
-        text = get_section_card_text(section_key)
-        bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
+    # Парсим оценку из текста
+    match = re.search(r'\((\d)\)', text)  # ищем (1), (2), (3), (4), (5)
+    if match:
+        rating = int(match.group(1))
+        comment = text.replace(f'({rating})', '').strip()
     else:
-        start(call.message)
-
-def save_full_review(message, section_key, rating):
-    review_text = message.text
+        # Если оценка не найдена, пробуем найти просто цифру в конце
+        match2 = re.search(r'(\d)$', text)
+        if match2 and int(match2.group(1)) in range(1, 6):
+            rating = int(match2.group(1))
+            comment = text.replace(str(rating), '').strip()
+        else:
+            bot.send_message(
+                message.chat.id,
+                '❌ Не удалось найти оценку (1-5). Напишите отзыв с оценкой, например:\n"Отличная секция! (5)"'
+            )
+            return
     
+    # Удаляем сообщения
     try:
         bot.delete_message(message.chat.id, message.message_id - 1)
     except:
@@ -520,12 +492,11 @@ def save_full_review(message, section_key, rating):
     except:
         pass
     
-    result = save_review_to_db(section_key, message.from_user.id, rating, review_text)
+    # Сохраняем в БД
+    result = save_review_to_db(section_key, message.from_user.id, rating, comment)
     
     if message.chat.id in user_review_state:
         del user_review_state[message.chat.id]
-    if message.chat.id in user_rating_state:
-        del user_rating_state[message.chat.id]
     
     if result == 'updated':
         text = f'✅ Ваш отзыв обновлён! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
@@ -643,7 +614,7 @@ def admin_edit_link(call):
 def save_admin_edit(message):
     state = user_review_state[message.chat.id]
     parts = state.split('_', 2)
-    action = parts[0] + '_' + parts[1]  # edit_name, edit_address, edit_phone, edit_link
+    action = parts[0] + '_' + parts[1]
     section_key = parts[2]
     
     new_value = message.text
@@ -704,7 +675,6 @@ def admin_stats(call):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_back_'))
 def admin_back(call):
     section_key = call.data.replace('admin_back_', '')
-    # Переоткрываем админ-панель
     call.message.text = '/admin'
     admin_panel(call.message)
 
