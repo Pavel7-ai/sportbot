@@ -105,13 +105,39 @@ def add_default_sections():
     conn.close()
     print(f'✅ Добавлено {len(sections)} секций')
 
+def add_default_admin():
+    """Добавляет тестового админа (ЗАМЕНИ НА СВОЙ ID)"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # ЗДЕСЬ ВСТАВЬ СВОЙ TELEGRAM ID!
+    admin_telegram_id = 123456789  # ЗАМЕНИ НА СВОЙ ID!
+    section_key = 'football_konoplev'
+    
+    cur.execute("SELECT COUNT(*) FROM admins WHERE telegram_id = ?", (admin_telegram_id,))
+    exists = cur.fetchone()[0]
+    
+    if exists == 0:
+        cur.execute(
+            "INSERT INTO admins (telegram_id, section_key) VALUES (?, ?)",
+            (admin_telegram_id, section_key)
+        )
+        conn.commit()
+        print(f'✅ Админ добавлен (ID: {admin_telegram_id})')
+    else:
+        print('ℹ️ Админ уже существует')
+    
+    conn.close()
+
 # ==== ИНИЦИАЛИЗАЦИЯ ====
 init_db()
 add_default_sections()
+add_default_admin()
 
 # ==== БОТ ====
 TOKEN = os.getenv('TELEGRAM_TOKEN', '6059734363:AAEPa7yL052gvPAOQEA22EaNP-_2T2Yy7Yg')
 bot = telebot.TeleBot(TOKEN)
+bot.delete_webhook()
 
 # ==== ГЛОБАЛЬНЫЕ СЛОВАРИ ====
 user_location_data = {}
@@ -161,7 +187,7 @@ def save_review_to_db(section_key, user_id, rating, comment):
         )
         conn.commit()
         conn.close()
-        return True
+        return 'created'
 
 def get_reviews(section_key):
     conn = get_db_connection()
@@ -499,8 +525,6 @@ def save_full_review(message, section_key, rating):
     
     if result == 'updated':
         text = f'✅ Ваш отзыв обновлён! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
-    elif result == 'duplicate':
-        text = f'⚠️ Вы уже оставляли отзыв на эту секцию!\n\n{get_section_card_text(section_key)}'
     else:
         text = f'✅ Спасибо за ваш отзыв! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
     
@@ -530,6 +554,155 @@ def view_reviews(call):
     kb = types.InlineKeyboardMarkup(row_width=1)
     kb.add(types.InlineKeyboardButton(text='🔙 Назад к карточке', callback_data=f'back_to_card_{section_key}'))
     bot.send_message(call.message.chat.id, text, parse_mode='html', reply_markup=kb)
+
+# ==================== АДМИН-ПАНЕЛЬ ====================
+
+@bot.message_handler(commands=['admin'])
+def admin_panel(message):
+    user_id = message.from_user.id
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT section_key FROM admins WHERE telegram_id = ?", (user_id,))
+    admin = cur.fetchone()
+    conn.close()
+    
+    if not admin:
+        bot.send_message(message.chat.id, '❌ У вас нет прав администратора.')
+        return
+    
+    section_key = admin[0]
+    section = get_section_data(section_key)
+    
+    kb = types.InlineKeyboardMarkup(row_width=1)
+    kb.add(
+        types.InlineKeyboardButton('✏️ Редактировать название', callback_data=f'admin_edit_name_{section_key}'),
+        types.InlineKeyboardButton('📍 Редактировать адрес', callback_data=f'admin_edit_address_{section_key}'),
+        types.InlineKeyboardButton('📞 Редактировать телефон', callback_data=f'admin_edit_phone_{section_key}'),
+        types.InlineKeyboardButton('🔗 Редактировать ссылку', callback_data=f'admin_edit_link_{section_key}'),
+        types.InlineKeyboardButton('📊 Статистика секции', callback_data=f'admin_stats_{section_key}'),
+        types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_main')
+    )
+    
+    bot.send_message(
+        message.chat.id,
+        f'👑 <b>Панель администратора</b>\n\n<i>Вы управляете секцией:</i>\n<b>{section["name"]}</b>',
+        parse_mode='html',
+        reply_markup=kb
+    )
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('admin_edit_name_'))
+def admin_edit_name(call):
+    section_key = call.data.replace('admin_edit_name_', '')
+    user_review_state[call.message.chat.id] = f'edit_name_{section_key}'
+    
+    bot.edit_message_text(
+        '📝 Введите новое название секции:',
+        call.message.chat.id,
+        call.message.message_id
+    )
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('admin_edit_address_'))
+def admin_edit_address(call):
+    section_key = call.data.replace('admin_edit_address_', '')
+    user_review_state[call.message.chat.id] = f'edit_address_{section_key}'
+    
+    bot.edit_message_text(
+        '📍 Введите новый адрес секции:',
+        call.message.chat.id,
+        call.message.message_id
+    )
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('admin_edit_phone_'))
+def admin_edit_phone(call):
+    section_key = call.data.replace('admin_edit_phone_', '')
+    user_review_state[call.message.chat.id] = f'edit_phone_{section_key}'
+    
+    bot.edit_message_text(
+        '📞 Введите новый телефон секции:',
+        call.message.chat.id,
+        call.message.message_id
+    )
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('admin_edit_link_'))
+def admin_edit_link(call):
+    section_key = call.data.replace('admin_edit_link_', '')
+    user_review_state[call.message.chat.id] = f'edit_link_{section_key}'
+    
+    bot.edit_message_text(
+        '🔗 Введите новую ссылку секции:',
+        call.message.chat.id,
+        call.message.message_id
+    )
+
+@bot.message_handler(func=lambda message: message.chat.id in user_review_state)
+def save_admin_edit(message):
+    state = user_review_state[message.chat.id]
+    parts = state.split('_', 2)
+    action = parts[0] + '_' + parts[1]  # edit_name, edit_address, edit_phone, edit_link
+    section_key = parts[2]
+    
+    new_value = message.text
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    if action == 'edit_name':
+        cur.execute("UPDATE sections SET name = ? WHERE key = ?", (new_value, section_key))
+    elif action == 'edit_address':
+        cur.execute("UPDATE sections SET address = ? WHERE key = ?", (new_value, section_key))
+    elif action == 'edit_phone':
+        cur.execute("UPDATE sections SET phone = ? WHERE key = ?", (new_value, section_key))
+    elif action == 'edit_link':
+        cur.execute("UPDATE sections SET link = ? WHERE key = ?", (new_value, section_key))
+    
+    conn.commit()
+    conn.close()
+    
+    del user_review_state[message.chat.id]
+    
+    bot.send_message(
+        message.chat.id,
+        f'✅ Данные обновлены!\n\n{get_section_card_text(section_key)}',
+        parse_mode='html',
+        reply_markup=section_keyboard(section_key)
+    )
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('admin_stats_'))
+def admin_stats(call):
+    section_key = call.data.replace('admin_stats_', '')
+    
+    reviews = get_reviews(section_key)
+    rating_data = get_section_rating(section_key)
+    
+    text = f'📊 <b>Статистика секции</b>\n\n'
+    text += f'⭐ Средний рейтинг: {rating_data["rating"]:.1f}\n'
+    text += f'📝 Всего отзывов: {rating_data["count"]}\n\n'
+    text += f'📖 <b>Последние отзывы:</b>\n'
+    
+    if reviews:
+        for rev in reviews[:3]:
+            text += f'⭐ {rev["rating"]} — {rev["comment"]}\n'
+    else:
+        text += 'Пока нет отзывов.'
+    
+    kb = types.InlineKeyboardMarkup()
+    kb.add(types.InlineKeyboardButton('🔙 Назад в панель', callback_data=f'admin_back_{section_key}'))
+    
+    bot.edit_message_text(
+        text,
+        call.message.chat.id,
+        call.message.message_id,
+        parse_mode='html',
+        reply_markup=kb
+    )
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('admin_back_'))
+def admin_back(call):
+    section_key = call.data.replace('admin_back_', '')
+    # Переоткрываем админ-панель
+    call.message.text = '/admin'
+    admin_panel(call.message)
 
 # ==================== ОСНОВНОЙ ОБРАБОТЧИК ====================
 
@@ -603,5 +776,4 @@ def main(message):
 
 if __name__ == '__main__':
     print('🚀 Бот запущен!')
-    bot.delete_webhook()
     bot.polling(none_stop=True)
