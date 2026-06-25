@@ -2,7 +2,6 @@ import telebot
 from telebot import types
 import sqlite3
 import os
-import re
 
 # ==== ПОДКЛЮЧЕНИЕ К SQLite ====
 DB_FILE = 'sport_bot.db'
@@ -107,12 +106,10 @@ def add_default_sections():
     print(f'✅ Добавлено {len(sections)} секций')
 
 def add_default_admin():
-    """Добавляет тестового админа (ЗАМЕНИ НА СВОЙ ID)"""
     conn = get_db_connection()
     cur = conn.cursor()
     
-    # ЗДЕСЬ ВСТАВЬ СВОЙ TELEGRAM ID!
-    admin_telegram_id = 647992946  # ← ЗАМЕНИ НА СВОЙ ID!
+    admin_telegram_id = 647992946
     section_key = 'football_konoplev'
     
     cur.execute("SELECT COUNT(*) FROM admins WHERE telegram_id = ?", (admin_telegram_id,))
@@ -283,7 +280,7 @@ def location_keyboard_with_back_to_card(section_key):
     kb.add(types.InlineKeyboardButton(text='🔙 Назад к карточке', callback_data=f'back_to_card_{section_key}'))
     return kb
 
-@bot.message_handler(commands=['start', 'back'])
+@bot.message_handler(commands=['start'])
 def start(message):
     get_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
     kb = types.InlineKeyboardMarkup(row_width=2)
@@ -427,62 +424,91 @@ def back_to_main(call):
         del user_location_data[call.message.chat.id]
     start(call.message)
 
-# ==================== ОТЗЫВ (ОЦЕНКА + ТЕКСТ В ОДНОМ СООБЩЕНИИ) ====================
+# ==================== ЕДИНЫЙ ОТЗЫВ (ОЦЕНКА + ТЕКСТ) ====================
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('review_'))
-def ask_review(call):
+def ask_review_rating(call):
     section_key = call.data.split('_', 1)[1]
     
     bot.delete_message(call.message.chat.id, call.message.message_id)
     
     user_review_state[call.message.chat.id] = section_key
+    user_rating_state[call.message.chat.id] = section_key
+    
+    kb = types.InlineKeyboardMarkup(row_width=5)
+    buttons = [types.InlineKeyboardButton(str(i), callback_data=f'review_rate_{section_key}_{i}') for i in range(1, 6)]
+    kb.add(*buttons)
+    kb.add(types.InlineKeyboardButton('❌ Отмена', callback_data='cancel_review_full'))
+    
+    bot.send_message(
+        call.message.chat.id,
+        '⭐ Оцените секцию (1-5):',
+        reply_markup=kb
+    )
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('review_rate_'))
+def ask_review_text(call):
+    parts = call.data.split('_')
+    section_key = parts[2]
+    rating = int(parts[3])
+    
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+    
+    user_rating_state[call.message.chat.id] = rating
+    user_review_state[call.message.chat.id] = section_key
     
     kb = types.InlineKeyboardMarkup()
-    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'cancel_review_{section_key}'))
+    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_rating_{section_key}'))
     
     msg = bot.send_message(
         call.message.chat.id,
-        f'📝 Напишите ваш отзыв и оценку (1-5) в одном сообщении.\n\n<b>Пример:</b> "Отличная секция! (5)"',
-        parse_mode='html',
+        f'📝 Напишите ваш отзыв о секции:',
         reply_markup=kb
     )
-    bot.register_next_step_handler(msg, save_review_with_rating, section_key)
+    bot.register_next_step_handler(msg, save_full_review, section_key, rating)
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('cancel_review_'))
-def cancel_review(call):
-    section_key = call.data.split('_', 2)[2]
+@bot.callback_query_handler(func=lambda call: call.data.startswith('back_to_rating_'))
+def back_to_rating(call):
+    section_key = call.data.split('_', 3)[3]
     chat_id = call.message.chat.id
     
     bot.delete_message(chat_id, call.message.message_id)
     
     if chat_id in user_review_state:
         del user_review_state[chat_id]
+    if chat_id in user_rating_state:
+        del user_rating_state[chat_id]
     
     text = get_section_card_text(section_key)
-    bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
+    bot.send_message(
+        chat_id,
+        text,
+        parse_mode='html',
+        reply_markup=section_keyboard(section_key)
+    )
 
-def save_review_with_rating(message, section_key):
-    text = message.text
+@bot.callback_query_handler(func=lambda call: call.data == 'cancel_review_full')
+def cancel_review_full(call):
+    chat_id = call.message.chat.id
     
-    # Парсим оценку из текста
-    match = re.search(r'\((\d)\)', text)  # ищем (1), (2), (3), (4), (5)
-    if match:
-        rating = int(match.group(1))
-        comment = text.replace(f'({rating})', '').strip()
+    section_key = user_review_state.get(chat_id)
+    
+    bot.delete_message(chat_id, call.message.message_id)
+    
+    if chat_id in user_review_state:
+        del user_review_state[chat_id]
+    if chat_id in user_rating_state:
+        del user_rating_state[chat_id]
+    
+    if section_key:
+        text = get_section_card_text(section_key)
+        bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
     else:
-        # Если оценка не найдена, пробуем найти просто цифру в конце
-        match2 = re.search(r'(\d)$', text)
-        if match2 and int(match2.group(1)) in range(1, 6):
-            rating = int(match2.group(1))
-            comment = text.replace(str(rating), '').strip()
-        else:
-            bot.send_message(
-                message.chat.id,
-                '❌ Не удалось найти оценку (1-5). Напишите отзыв с оценкой, например:\n"Отличная секция! (5)"'
-            )
-            return
+        start(call.message)
+
+def save_full_review(message, section_key, rating):
+    review_text = message.text
     
-    # Удаляем сообщения
     try:
         bot.delete_message(message.chat.id, message.message_id - 1)
     except:
@@ -492,11 +518,12 @@ def save_review_with_rating(message, section_key):
     except:
         pass
     
-    # Сохраняем в БД
-    result = save_review_to_db(section_key, message.from_user.id, rating, comment)
+    result = save_review_to_db(section_key, message.from_user.id, rating, review_text)
     
     if message.chat.id in user_review_state:
         del user_review_state[message.chat.id]
+    if message.chat.id in user_rating_state:
+        del user_rating_state[message.chat.id]
     
     if result == 'updated':
         text = f'✅ Ваш отзыв обновлён! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
@@ -571,10 +598,14 @@ def admin_edit_name(call):
     section_key = call.data.replace('admin_edit_name_', '')
     user_review_state[call.message.chat.id] = f'edit_name_{section_key}'
     
+    kb = types.InlineKeyboardMarkup()
+    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'admin_back_{section_key}'))
+    
     bot.edit_message_text(
         '📝 Введите новое название секции:',
         call.message.chat.id,
-        call.message.message_id
+        call.message.message_id,
+        reply_markup=kb
     )
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_edit_address_'))
@@ -582,10 +613,14 @@ def admin_edit_address(call):
     section_key = call.data.replace('admin_edit_address_', '')
     user_review_state[call.message.chat.id] = f'edit_address_{section_key}'
     
+    kb = types.InlineKeyboardMarkup()
+    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'admin_back_{section_key}'))
+    
     bot.edit_message_text(
         '📍 Введите новый адрес секции:',
         call.message.chat.id,
-        call.message.message_id
+        call.message.message_id,
+        reply_markup=kb
     )
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_edit_phone_'))
@@ -593,10 +628,14 @@ def admin_edit_phone(call):
     section_key = call.data.replace('admin_edit_phone_', '')
     user_review_state[call.message.chat.id] = f'edit_phone_{section_key}'
     
+    kb = types.InlineKeyboardMarkup()
+    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'admin_back_{section_key}'))
+    
     bot.edit_message_text(
         '📞 Введите новый телефон секции:',
         call.message.chat.id,
-        call.message.message_id
+        call.message.message_id,
+        reply_markup=kb
     )
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_edit_link_'))
@@ -604,10 +643,14 @@ def admin_edit_link(call):
     section_key = call.data.replace('admin_edit_link_', '')
     user_review_state[call.message.chat.id] = f'edit_link_{section_key}'
     
+    kb = types.InlineKeyboardMarkup()
+    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'admin_back_{section_key}'))
+    
     bot.edit_message_text(
         '🔗 Введите новую ссылку секции:',
         call.message.chat.id,
-        call.message.message_id
+        call.message.message_id,
+        reply_markup=kb
     )
 
 @bot.message_handler(func=lambda message: message.chat.id in user_review_state)
@@ -636,11 +679,14 @@ def save_admin_edit(message):
     
     del user_review_state[message.chat.id]
     
+    kb = types.InlineKeyboardMarkup()
+    kb.add(types.InlineKeyboardButton('🔙 Назад в панель', callback_data=f'admin_back_{section_key}'))
+    
     bot.send_message(
         message.chat.id,
         f'✅ Данные обновлены!\n\n{get_section_card_text(section_key)}',
         parse_mode='html',
-        reply_markup=section_keyboard(section_key)
+        reply_markup=kb
     )
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_stats_'))
@@ -675,8 +721,26 @@ def admin_stats(call):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_back_'))
 def admin_back(call):
     section_key = call.data.replace('admin_back_', '')
-    call.message.text = '/admin'
-    admin_panel(call.message)
+    
+    section = get_section_data(section_key)
+    
+    kb = types.InlineKeyboardMarkup(row_width=1)
+    kb.add(
+        types.InlineKeyboardButton('✏️ Редактировать название', callback_data=f'admin_edit_name_{section_key}'),
+        types.InlineKeyboardButton('📍 Редактировать адрес', callback_data=f'admin_edit_address_{section_key}'),
+        types.InlineKeyboardButton('📞 Редактировать телефон', callback_data=f'admin_edit_phone_{section_key}'),
+        types.InlineKeyboardButton('🔗 Редактировать ссылку', callback_data=f'admin_edit_link_{section_key}'),
+        types.InlineKeyboardButton('📊 Статистика секции', callback_data=f'admin_stats_{section_key}'),
+        types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_main')
+    )
+    
+    bot.edit_message_text(
+        f'👑 <b>Панель администратора</b>\n\n<i>Вы управляете секцией:</i>\n<b>{section["name"]}</b>',
+        call.message.chat.id,
+        call.message.message_id,
+        parse_mode='html',
+        reply_markup=kb
+    )
 
 # ==================== ОСНОВНОЙ ОБРАБОТЧИК ====================
 
