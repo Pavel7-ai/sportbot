@@ -368,10 +368,8 @@ def show_sport_sections(chat_id, sport, message_id=None):
 def ask_location(call):
     sport = call.data.replace('find_near_', '')
     
-    # Сохраняем вид спорта в состояние
     user_review_state[call.message.chat.id] = f'near_{sport}'
     
-    # Клавиатура с кнопкой отправки геолокации
     kb = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     kb.add(types.KeyboardButton(text='📍 Отправить местоположение', request_location=True))
     kb.add(types.KeyboardButton(text='❌ Отмена'))
@@ -386,7 +384,6 @@ def ask_location(call):
 
 @bot.message_handler(content_types=['location'])
 def handle_location(message):
-    # Проверяем, есть ли состояние 'near_'
     if message.chat.id not in user_review_state or not user_review_state[message.chat.id].startswith('near_'):
         bot.send_message(message.chat.id, 'Я тебя не понимаю, воспользуйся подсказкой в меню 👇')
         return
@@ -397,17 +394,16 @@ def handle_location(message):
     user_lat = message.location.latitude
     user_lon = message.location.longitude
     
-    # Получаем все секции по виду спорта
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
         "SELECT key, name, lat, lon FROM sections WHERE key LIKE ? AND lat IS NOT NULL AND lon IS NOT NULL",
         (f'{sport}_%',)
     )
-    sections = cur.fetchall()
+    rows = cur.fetchall()
     conn.close()
     
-    if not sections:
+    if not rows:
         bot.send_message(
             message.chat.id,
             '❌ Нет секций по выбранному виду спорта с указанными координатами.',
@@ -415,19 +411,18 @@ def handle_location(message):
         )
         return
     
-    # Вычисляем расстояние для каждой секции
-    for section in sections:
+    sections = []
+    for row in rows:
+        section = dict(row)
         if section['lat'] and section['lon']:
             distance = calculate_distance(user_lat, user_lon, section['lat'], section['lon'])
             section['distance'] = round(distance, 1)
         else:
             section['distance'] = None
+        sections.append(section)
     
-    # Сортируем по расстоянию
     sections_with_dist = [s for s in sections if s['distance'] is not None]
     sections_with_dist.sort(key=lambda x: x['distance'])
-    
-    # Если есть секции без координат — добавляем их в конец
     sections_without_dist = [s for s in sections if s['distance'] is None]
     all_sections = sections_with_dist + sections_without_dist
     
@@ -439,7 +434,6 @@ def handle_location(message):
         )
         return
     
-    # Формируем результат
     sport_icons = {
         'football': '⚽️',
         'hockey': '🏒',
@@ -452,7 +446,7 @@ def handle_location(message):
     text = f'{icon} <b>Ближайшие секции:</b>\n\n'
     
     kb = types.InlineKeyboardMarkup(row_width=1)
-    for section in all_sections[:10]:  # Показываем максимум 10
+    for section in all_sections[:10]:
         dist_text = f' — {section["distance"]} км' if section['distance'] is not None else ' (координаты не указаны)'
         text += f'• {section["name"]}{dist_text}\n'
         kb.add(types.InlineKeyboardButton(
@@ -462,7 +456,6 @@ def handle_location(message):
     
     kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_sport_{sport}'))
     
-    # Убираем клавиатуру с геолокацией
     bot.send_message(
         message.chat.id,
         '✅ Спасибо! Вот что я нашёл:',
@@ -506,7 +499,7 @@ def start(message):
     kb.add(btn1, btn2, btn3, btn4, btn5)
     bot.send_message(message.chat.id, '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>', parse_mode='html', reply_markup=kb)
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('back_to_main'))
+@bot.callback_query_handler(func=lambda call: call.data == 'back_to_main')
 def back_to_main(call):
     if call.message.chat.id in user_location_data:
         del user_location_data[call.message.chat.id]
