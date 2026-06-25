@@ -2,6 +2,7 @@ import telebot
 from telebot import types
 import sqlite3
 import os
+import re
 
 # ==== ПОДКЛЮЧЕНИЕ К SQLite ====
 DB_FILE = 'sport_bot.db'
@@ -428,7 +429,26 @@ def back_to_list(call):
 def back_to_main(call):
     if call.message.chat.id in user_location_data:
         del user_location_data[call.message.chat.id]
-    start(call.message)
+    
+    try:
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    except:
+        pass
+    
+    get_user(call.from_user.id, call.from_user.username, call.from_user.first_name)
+    kb = types.InlineKeyboardMarkup(row_width=2)
+    btn1 = types.InlineKeyboardButton(text='Футбол⚽️', callback_data='btn1')
+    btn2 = types.InlineKeyboardButton(text='Хоккей🏒', callback_data='btn2')
+    btn3 = types.InlineKeyboardButton(text='Баскетбол🏀', callback_data='btn3')
+    btn4 = types.InlineKeyboardButton(text='Бокс🥊', callback_data='btn4')
+    btn5 = types.InlineKeyboardButton(text='Гандбол🤾', callback_data='btn5')
+    kb.add(btn1, btn2, btn3, btn4, btn5)
+    bot.send_message(
+        call.message.chat.id,
+        '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>',
+        parse_mode='html',
+        reply_markup=kb
+    )
 
 # ==================== ОТЗЫВ В ОДНОМ СООБЩЕНИИ ====================
 
@@ -467,9 +487,7 @@ def cancel_review(call):
 def save_review_with_rating(message, section_key):
     text = message.text
     
-    # Парсим оценку из текста
-    import re
-    match = re.search(r'\((\d)\)', text)  # ищем (1), (2), (3), (4), (5)
+    match = re.search(r'\((\d)\)', text)
     if match:
         rating = int(match.group(1))
         comment = text.replace(f'({rating})', '').strip()
