@@ -111,7 +111,7 @@ def add_default_admin():
     cur = conn.cursor()
     
     # ЗДЕСЬ ВСТАВЬ СВОЙ TELEGRAM ID!
-    admin_telegram_id = 123456789  # ЗАМЕНИ НА СВОЙ ID!
+    admin_telegram_id = 647992946  # ЗАМЕНИ НА СВОЙ ID!
     section_key = 'football_konoplev'
     
     cur.execute("SELECT COUNT(*) FROM admins WHERE telegram_id = ?", (admin_telegram_id,))
