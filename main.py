@@ -137,6 +137,12 @@ TOKEN = os.getenv('TELEGRAM_TOKEN', '6059734363:AAEPa7yL052gvPAOQEA22EaNP-_2T2Yy
 bot = telebot.TeleBot(TOKEN)
 bot.delete_webhook()
 
+# ==== НАСТРОЙКА МЕНЮ КОМАНД ====
+bot.set_my_commands([
+    types.BotCommand("start", "Начать пользование"),
+    types.BotCommand("admin", "Панель администратора"),
+])
+
 # ==== ГЛОБАЛЬНЫЕ СЛОВАРИ ====
 user_location_data = {}
 user_review_state = {}
