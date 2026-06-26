@@ -208,7 +208,8 @@ bot.set_my_commands([
 
 # ==== ГЛОБАЛЬНЫЕ СЛОВАРИ ====
 user_location_data = {}
-user_review_state = {}
+user_review_state = {}      # Для отзывов - хранит словарь {section_key, request_msg_id}
+user_location_state = {}    # Для поиска рядом - хранит строку с видом спорта
 user_rating_state = {}
 
 # ==== ФУНКЦИИ РАБОТЫ С БД ====
@@ -439,7 +440,7 @@ def show_sport_sections(chat_id, sport, message_id=None, parent_sport=None):
 def ask_location(call):
     sport = call.data.replace('find_near_', '')
     
-    user_review_state[call.message.chat.id] = f'near_{sport}'
+    user_location_state[call.message.chat.id] = sport
     
     kb = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     kb.add(types.KeyboardButton(text='📍 Отправить местоположение', request_location=True))
@@ -455,12 +456,14 @@ def ask_location(call):
 
 @bot.message_handler(content_types=['location'])
 def handle_location(message):
-    if message.chat.id not in user_review_state or not user_review_state[message.chat.id].startswith('near_'):
-        bot.send_message(message.chat.id, 'Я тебя не понимаю, воспользуйся подсказкой в меню 👇')
+    chat_id = message.chat.id
+    
+    if chat_id not in user_location_state:
+        bot.send_message(chat_id, 'Я тебя не понимаю, воспользуйся подсказкой в меню 👇')
         return
     
-    sport = user_review_state[message.chat.id].replace('near_', '')
-    del user_review_state[message.chat.id]
+    sport = user_location_state[chat_id]
+    del user_location_state[chat_id]
     
     user_lat = message.location.latitude
     user_lon = message.location.longitude
@@ -476,7 +479,7 @@ def handle_location(message):
     
     if not rows:
         bot.send_message(
-            message.chat.id,
+            chat_id,
             '❌ Нет секций по выбранному виду спорта с указанными координатами.',
             reply_markup=types.ReplyKeyboardRemove()
         )
@@ -499,7 +502,7 @@ def handle_location(message):
     
     if not all_sections:
         bot.send_message(
-            message.chat.id,
+            chat_id,
             '❌ Нет секций с указанными координатами.',
             reply_markup=types.ReplyKeyboardRemove()
         )
@@ -537,7 +540,7 @@ def handle_location(message):
     
     # Отправляем список секций
     bot.send_message(
-        message.chat.id,
+        chat_id,
         text,
         parse_mode='html',
         reply_markup=kb
@@ -545,18 +548,23 @@ def handle_location(message):
     
     # Убираем клавиатуру без лишнего сообщения
     bot.send_message(
-        message.chat.id,
+        chat_id,
         '',
         reply_markup=types.ReplyKeyboardRemove()
     )
 
 @bot.message_handler(func=lambda message: message.text == '❌ Отмена')
 def cancel_location(message):
-    if message.chat.id in user_review_state:
-        del user_review_state[message.chat.id]
+    chat_id = message.chat.id
+    
+    if chat_id in user_location_state:
+        del user_location_state[chat_id]
+    
+    if chat_id in user_review_state:
+        del user_review_state[chat_id]
     
     bot.send_message(
-        message.chat.id,
+        chat_id,
         '❌ Поиск отменён.',
         reply_markup=types.ReplyKeyboardRemove()
     )
@@ -608,11 +616,13 @@ def start(message):
 
 @bot.callback_query_handler(func=lambda call: call.data == 'back_to_main')
 def back_to_main(call):
-    if call.message.chat.id in user_location_data:
-        del user_location_data[call.message.chat.id]
+    chat_id = call.message.chat.id
+    
+    if chat_id in user_location_data:
+        del user_location_data[chat_id]
     
     try:
-        bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.delete_message(chat_id, call.message.message_id)
     except:
         pass
     
@@ -629,7 +639,7 @@ def back_to_main(call):
     btn9 = types.InlineKeyboardButton(text='Гимнастика 🤸', callback_data='sport_gymnastics')
     kb.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9)
     bot.send_message(
-        call.message.chat.id,
+        chat_id,
         '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>',
         parse_mode='html',
         reply_markup=kb
@@ -711,10 +721,11 @@ def back_to_card(call):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('review_'))
 def ask_review(call):
     section_key = call.data.split('_', 1)[1]
+    chat_id = call.message.chat.id
     
     # Удаляем сообщение с карточкой
     try:
-        bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.delete_message(chat_id, call.message.message_id)
     except:
         pass
     
@@ -722,24 +733,26 @@ def ask_review(call):
     kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'cancel_review_{section_key}'))
     
     msg = bot.send_message(
-        call.message.chat.id,
+        chat_id,
         f'📝 Напишите ваш отзыв и оценку (1-5) в одном сообщении.\n\n<b>Пример:</b> "Отличная секция! (5)"',
         parse_mode='html',
         reply_markup=kb
     )
     
     # Сохраняем ID сообщения с запросом отзыва
-    user_review_state[call.message.chat.id] = {'section_key': section_key, 'request_msg_id': msg.message_id}
+    user_review_state[chat_id] = {'section_key': section_key, 'request_msg_id': msg.message_id}
     
     bot.register_next_step_handler(msg, save_review_with_rating, section_key)
 
 def save_review_with_rating(message, section_key):
+    chat_id = message.chat.id
+    
     # Если пользователь нажал "Назад" - обрабатываем отдельно
     if message.text == '🔙 Назад':
-        if message.chat.id in user_review_state:
-            del user_review_state[message.chat.id]
+        if chat_id in user_review_state:
+            del user_review_state[chat_id]
         text = get_section_card_text(section_key)
-        bot.send_message(message.chat.id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
+        bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
         return
     
     text = message.text
@@ -758,7 +771,7 @@ def save_review_with_rating(message, section_key):
             # Ошибка - не найдена оценка
             # Удаляем сообщение пользователя
             try:
-                bot.delete_message(message.chat.id, message.message_id)
+                bot.delete_message(chat_id, message.message_id)
             except:
                 pass
             
@@ -767,7 +780,7 @@ def save_review_with_rating(message, section_key):
             
             # Отправляем сообщение с ошибкой
             msg = bot.send_message(
-                message.chat.id,
+                chat_id,
                 '❌ Не удалось найти оценку (1-5). Напишите отзыв с оценкой, например:\n"Отличная секция! (5)"\n\n<i>Или нажмите "Назад", чтобы вернуться</i>',
                 parse_mode='html',
                 reply_markup=kb
@@ -779,7 +792,7 @@ def save_review_with_rating(message, section_key):
     # Проверяем рейтинг
     if rating < 1 or rating > 5:
         try:
-            bot.delete_message(message.chat.id, message.message_id)
+            bot.delete_message(chat_id, message.message_id)
         except:
             pass
         
@@ -787,7 +800,7 @@ def save_review_with_rating(message, section_key):
         kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'cancel_review_{section_key}'))
         
         msg = bot.send_message(
-            message.chat.id,
+            chat_id,
             '❌ Оценка должна быть от 1 до 5!\n\n<i>Напишите отзыв с оценкой, например: "Отличная секция! (5)"</i>',
             parse_mode='html',
             reply_markup=kb
@@ -796,29 +809,29 @@ def save_review_with_rating(message, section_key):
         return
     
     # Удаляем сообщение с запросом отзыва (сохраняли его ID)
-    if message.chat.id in user_review_state and isinstance(user_review_state[message.chat.id], dict):
-        request_msg_id = user_review_state[message.chat.id].get('request_msg_id')
+    if chat_id in user_review_state and isinstance(user_review_state[chat_id], dict):
+        request_msg_id = user_review_state[chat_id].get('request_msg_id')
         if request_msg_id:
             try:
-                bot.delete_message(message.chat.id, request_msg_id)
+                bot.delete_message(chat_id, request_msg_id)
             except:
                 pass
     
     # Удаляем сообщение пользователя с отзывом
     try:
-        bot.delete_message(message.chat.id, message.message_id)
+        bot.delete_message(chat_id, message.message_id)
     except:
         pass
     
     # Сохраняем отзыв
     result = save_review_to_db(section_key, message.from_user.id, rating, comment)
     
-    if message.chat.id in user_review_state:
-        del user_review_state[message.chat.id]
+    if chat_id in user_review_state:
+        del user_review_state[chat_id]
     
     if result == 'error':
         bot.send_message(
-            message.chat.id,
+            chat_id,
             '❌ Ошибка при сохранении отзыва. Попробуйте ещё раз.'
         )
         return
@@ -830,7 +843,7 @@ def save_review_with_rating(message, section_key):
         text_result = f'✅ Спасибо за ваш отзыв! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
     
     bot.send_message(
-        message.chat.id,
+        chat_id,
         text_result,
         parse_mode='html',
         reply_markup=section_keyboard(section_key)
@@ -859,9 +872,11 @@ def cancel_review(call):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('view_reviews_'))
 def view_reviews(call):
     section_key = call.data.replace('view_reviews_', '')
-    reviews = get_reviews(section_key)
+    chat_id = call.message.chat.id
     
-    bot.delete_message(call.message.chat.id, call.message.message_id)
+    bot.delete_message(chat_id, call.message.message_id)
+    
+    reviews = get_reviews(section_key)
     
     if not reviews:
         text = '📖 Пока нет отзывов. Будьте первым!'
@@ -872,7 +887,7 @@ def view_reviews(call):
     
     kb = types.InlineKeyboardMarkup(row_width=1)
     kb.add(types.InlineKeyboardButton(text='🔙 Назад к карточке', callback_data=f'back_to_card_{section_key}'))
-    bot.send_message(call.message.chat.id, text, parse_mode='html', reply_markup=kb)
+    bot.send_message(chat_id, text, parse_mode='html', reply_markup=kb)
 
 # ==================== АДМИН-ПАНЕЛЬ ====================
 
