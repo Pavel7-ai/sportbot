@@ -6,11 +6,11 @@ import re
 import math
 import time
 
-# ==== ВРЕМЕННО УДАЛЯЕМ СТАРУЮ БАЗУ ====
+# ==== ВРЕМЕННО УДАЛЯЕМ СТАРУЮ БАЗУ (ПОТОМ УБЕРИ) ====
 if os.path.exists('sport_bot.db'):
     os.remove('sport_bot.db')
     print('🗑️ Старая база удалена')
-# ========================================
+# ======================================================
 
 DB_FILE = 'sport_bot.db'
 
@@ -391,8 +391,6 @@ def handle_location(message):
     user_lat = message.location.latitude
     user_lon = message.location.longitude
     
-    bot.send_message(chat_id, '', reply_markup=types.ReplyKeyboardRemove())
-    
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("SELECT key, name, lat, lon FROM sections WHERE key LIKE ? AND lat IS NOT NULL AND lon IS NOT NULL", (f'{sport}_%',))
@@ -400,7 +398,7 @@ def handle_location(message):
     conn.close()
     
     if not rows:
-        bot.send_message(chat_id, '❌ Нет секций по выбранному виду спорта с указанными координатами.')
+        bot.send_message(chat_id, '❌ Нет секций по выбранному виду спорта с указанными координатами.', reply_markup=types.ReplyKeyboardRemove())
         return
     
     sections = []
@@ -419,7 +417,7 @@ def handle_location(message):
     all_sections = sections_with_dist + sections_without_dist
     
     if not all_sections:
-        bot.send_message(chat_id, '❌ Нет секций с указанными координатами.')
+        bot.send_message(chat_id, '❌ Нет секций с указанными координатами.', reply_markup=types.ReplyKeyboardRemove())
         return
     
     sport_icons = {
