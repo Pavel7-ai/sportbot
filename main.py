@@ -718,8 +718,6 @@ def ask_review(call):
     except:
         pass
     
-    user_review_state[call.message.chat.id] = section_key
-    
     kb = types.InlineKeyboardMarkup()
     kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'cancel_review_{section_key}'))
     
@@ -729,6 +727,10 @@ def ask_review(call):
         parse_mode='html',
         reply_markup=kb
     )
+    
+    # Сохраняем ID сообщения с запросом отзыва
+    user_review_state[call.message.chat.id] = {'section_key': section_key, 'request_msg_id': msg.message_id}
+    
     bot.register_next_step_handler(msg, save_review_with_rating, section_key)
 
 def save_review_with_rating(message, section_key):
@@ -793,13 +795,16 @@ def save_review_with_rating(message, section_key):
         bot.register_next_step_handler(msg, save_review_with_rating, section_key)
         return
     
-    # Всё правильно - удаляем сообщение с запросом отзыва
-    try:
-        bot.delete_message(message.chat.id, message.message_id - 1)
-    except:
-        pass
+    # Удаляем сообщение с запросом отзыва (сохраняли его ID)
+    if message.chat.id in user_review_state and isinstance(user_review_state[message.chat.id], dict):
+        request_msg_id = user_review_state[message.chat.id].get('request_msg_id')
+        if request_msg_id:
+            try:
+                bot.delete_message(message.chat.id, request_msg_id)
+            except:
+                pass
     
-    # Удаляем сообщение пользователя
+    # Удаляем сообщение пользователя с отзывом
     try:
         bot.delete_message(message.chat.id, message.message_id)
     except:
