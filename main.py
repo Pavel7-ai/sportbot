@@ -180,6 +180,13 @@ def add_default_admin():
     
     conn.close()
 
+# ==== ВРЕМЕННО: УДАЛЯЕМ СТАРУЮ БАЗУ (если нужно пересоздать) ====
+# import os
+# if os.path.exists('sport_bot.db'):
+#     os.remove('sport_bot.db')
+#     print('🗑️ Старая база удалена')
+# =====================================
+
 # ==== ИНИЦИАЛИЗАЦИЯ ====
 init_db()
 add_default_sections()
@@ -534,12 +541,7 @@ def handle_location(message):
     else:
         kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_sport_{sport}'))
     
-    bot.send_message(
-        message.chat.id,
-        '✅ Спасибо! Вот что я нашёл:',
-        reply_markup=types.ReplyKeyboardRemove()
-    )
-    
+    # Убираем клавиатуру и сразу показываем список секций
     bot.send_message(
         message.chat.id,
         text,
@@ -562,13 +564,29 @@ def cancel_location(message):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('back_to_sport_'))
 def back_to_sport(call):
     sport = call.data.replace('back_to_sport_', '')
-    bot.delete_message(call.message.chat.id, call.message.message_id)
-    show_sport_sections(call.message.chat.id, sport)
+    chat_id = call.message.chat.id
+    
+    # Удаляем сообщение со списком секций
+    try:
+        bot.delete_message(chat_id, call.message.message_id)
+    except:
+        pass
+    
+    # Показываем список секций заново
+    show_sport_sections(chat_id, sport)
 
 @bot.callback_query_handler(func=lambda call: call.data == 'back_to_martial_arts')
 def back_to_martial_arts(call):
-    bot.delete_message(call.message.chat.id, call.message.message_id)
-    show_sport_sections(call.message.chat.id, 'martial_arts')
+    chat_id = call.message.chat.id
+    
+    # Удаляем сообщение со списком секций
+    try:
+        bot.delete_message(chat_id, call.message.message_id)
+    except:
+        pass
+    
+    # Показываем меню единоборств
+    show_sport_sections(chat_id, 'martial_arts')
 
 @bot.message_handler(commands=['start'])
 def start(message):
