@@ -882,16 +882,25 @@ def cancel_review(call):
     section_key = call.data.split('_', 2)[2]
     chat_id = call.message.chat.id
     
-    # Удаляем сообщение с ошибкой или запросом отзыва
+    # Удаляем сообщение с ошибкой (на котором нажали "Назад")
     try:
         bot.delete_message(chat_id, call.message.message_id)
     except:
         pass
     
-    # Если есть сохранённое сообщение с ошибкой - удаляем его
+    # Если есть сохранённые сообщения - удаляем их
     if chat_id in user_review_state and isinstance(user_review_state[chat_id], dict):
+        # Удаляем сообщение с запросом отзыва
+        request_msg_id = user_review_state[chat_id].get('request_msg_id')
+        if request_msg_id:
+            try:
+                bot.delete_message(chat_id, request_msg_id)
+            except:
+                pass
+        
+        # Удаляем сообщение с ошибкой (если оно есть и это не текущее сообщение)
         error_msg_id = user_review_state[chat_id].get('error_msg_id')
-        if error_msg_id:
+        if error_msg_id and error_msg_id != call.message.message_id:
             try:
                 bot.delete_message(chat_id, error_msg_id)
             except:
