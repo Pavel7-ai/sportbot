@@ -374,7 +374,7 @@ def show_sport_sections(chat_id, sport, message_id=None, parent_sport=None):
     }
     icon = sport_icons.get(sport, '🏆')
     
-    kb = types.InlineKeyboardMarkup(row_width=1)
+    kb = types.InlineKeyboardMarkup(row_width=2)
     for section in sections:
         kb.add(types.InlineKeyboardButton(f'{icon} {section["name"]}', callback_data=f'section_{section["key"]}'))
     kb.add(types.InlineKeyboardButton('📍 Найти рядом со мной', callback_data=f'find_near_{sport}'))
@@ -416,9 +416,10 @@ def handle_location(message):
     user_lat = message.location.latitude
     user_lon = message.location.longitude
     
-    # СНАЧАЛА УБИРАЕМ КЛАВИАТУРУ
+    # Убираем клавиатуру (отправляем пустое сообщение, которое сразу удалим)
+    msg = bot.send_message(chat_id, '', reply_markup=types.ReplyKeyboardRemove())
     try:
-        bot.send_message(chat_id, '✅', reply_markup=types.ReplyKeyboardRemove())
+        bot.delete_message(chat_id, msg.message_id)
     except:
         pass
     
@@ -459,7 +460,7 @@ def handle_location(message):
     icon = sport_icons.get(sport, '🏆')
     
     text = f'{icon} <b>Ближайшие секции:</b>\n\n'
-    kb = types.InlineKeyboardMarkup(row_width=1)
+    kb = types.InlineKeyboardMarkup(row_width=2)
     for section in all_sections[:10]:
         dist_text = f' — {section["distance"]} км' if section['distance'] is not None else ' (координаты не указаны)'
         text += f'• {section["name"]}{dist_text}\n'
