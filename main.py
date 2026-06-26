@@ -4,6 +4,7 @@ import sqlite3
 import os
 import re
 import math
+import time
 
 # ==== ПОДКЛЮЧЕНИЕ К SQLite ====
 DB_FILE = 'sport_bot.db'
@@ -197,7 +198,6 @@ def calculate_distance(lat1, lon1, lat2, lon2):
 # ==== БОТ ====
 TOKEN = os.getenv('TELEGRAM_TOKEN', '6059734363:AAEPa7yL052gvPAOQEA22EaNP-_2T2Yy7Yg')
 bot = telebot.TeleBot(TOKEN)
-bot.delete_webhook()
 
 bot.set_my_commands([
     types.BotCommand("start", "Начать пользование"),
@@ -414,7 +414,7 @@ def handle_location(message):
     user_lat = message.location.latitude
     user_lon = message.location.longitude
     
-    # Убираем клавиатуру без лишних сообщений
+    # Убираем клавиатуру
     bot.send_message(chat_id, '', reply_markup=types.ReplyKeyboardRemove())
     
     conn = get_db_connection()
@@ -876,4 +876,14 @@ def main(message):
 
 if __name__ == '__main__':
     print('🚀 Бот запущен!')
+    
+    # Удаляем все вебхуки перед запуском
+    try:
+        bot.remove_webhook()
+        print('✅ Вебхук удалён')
+    except:
+        pass
+    
+    time.sleep(2)
+    
     bot.polling(none_stop=True)
