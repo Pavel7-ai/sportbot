@@ -406,8 +406,10 @@ def ask_location(call):
 @bot.message_handler(content_types=['location'])
 def handle_location(message):
     chat_id = message.chat.id
+    
+    # Проверяем, есть ли состояние
     if chat_id not in user_location_state:
-        bot.send_message(chat_id, 'Я тебя не понимаю, воспользуйся подсказкой в меню 👇')
+        bot.send_message(chat_id, '⚠️ Сначала нажмите "Найти рядом со мной" в меню!')
         return
     
     sport = user_location_state[chat_id]
@@ -416,12 +418,12 @@ def handle_location(message):
     user_lat = message.location.latitude
     user_lon = message.location.longitude
     
-    # Убираем клавиатуру (отправляем пустое сообщение, которое сразу удалим)
-    msg = bot.send_message(chat_id, '', reply_markup=types.ReplyKeyboardRemove())
+    # Убираем клавиатуру
     try:
-        bot.delete_message(chat_id, msg.message_id)
+        bot.delete_message(chat_id, message.message_id - 1)
     except:
         pass
+    bot.send_message(chat_id, '⏳ Ищу ближайшие секции...', reply_markup=types.ReplyKeyboardRemove())
     
     conn = get_db_connection()
     cur = conn.cursor()
