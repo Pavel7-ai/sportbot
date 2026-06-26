@@ -208,7 +208,7 @@ bot.set_my_commands([
 
 # ==== ГЛОБАЛЬНЫЕ СЛОВАРИ ====
 user_location_data = {}
-user_review_state = {}      # Для отзывов - хранит словарь {section_key, request_msg_id}
+user_review_state = {}      # Для отзывов - хранит словарь {section_key, request_msg_id, error_msg_id}
 user_location_state = {}    # Для поиска рядом - хранит строку с видом спорта
 user_rating_state = {}
 
@@ -740,7 +740,11 @@ def ask_review(call):
     )
     
     # Сохраняем ID сообщения с запросом отзыва
-    user_review_state[chat_id] = {'section_key': section_key, 'request_msg_id': msg.message_id}
+    user_review_state[chat_id] = {
+        'section_key': section_key, 
+        'request_msg_id': msg.message_id,
+        'error_msg_id': None
+    }
     
     bot.register_next_step_handler(msg, save_review_with_rating, section_key)
 
@@ -750,6 +754,12 @@ def save_review_with_rating(message, section_key):
     # Если пользователь нажал "Назад" - обрабатываем отдельно
     if message.text == '🔙 Назад':
         if chat_id in user_review_state:
+            # Удаляем сообщение с ошибкой, если оно есть
+            if user_review_state[chat_id].get('error_msg_id'):
+                try:
+                    bot.delete_message(chat_id, user_review_state[chat_id]['error_msg_id'])
+                except:
+                    pass
             del user_review_state[chat_id]
         text = get_section_card_text(section_key)
         bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
@@ -785,6 +795,11 @@ def save_review_with_rating(message, section_key):
                 parse_mode='html',
                 reply_markup=kb
             )
+            
+            # Сохраняем ID сообщения с ошибкой
+            if chat_id in user_review_state:
+                user_review_state[chat_id]['error_msg_id'] = msg.message_id
+            
             # Снова ждём ответ
             bot.register_next_step_handler(msg, save_review_with_rating, section_key)
             return
@@ -805,6 +820,11 @@ def save_review_with_rating(message, section_key):
             parse_mode='html',
             reply_markup=kb
         )
+        
+        # Сохраняем ID сообщения с ошибкой
+        if chat_id in user_review_state:
+            user_review_state[chat_id]['error_msg_id'] = msg.message_id
+        
         bot.register_next_step_handler(msg, save_review_with_rating, section_key)
         return
     
@@ -814,6 +834,14 @@ def save_review_with_rating(message, section_key):
         if request_msg_id:
             try:
                 bot.delete_message(chat_id, request_msg_id)
+            except:
+                pass
+        
+        # Удаляем сообщение с ошибкой, если оно есть
+        error_msg_id = user_review_state[chat_id].get('error_msg_id')
+        if error_msg_id:
+            try:
+                bot.delete_message(chat_id, error_msg_id)
             except:
                 pass
     
@@ -859,6 +887,15 @@ def cancel_review(call):
         bot.delete_message(chat_id, call.message.message_id)
     except:
         pass
+    
+    # Если есть сохранённое сообщение с ошибкой - удаляем его
+    if chat_id in user_review_state and isinstance(user_review_state[chat_id], dict):
+        error_msg_id = user_review_state[chat_id].get('error_msg_id')
+        if error_msg_id:
+            try:
+                bot.delete_message(chat_id, error_msg_id)
+            except:
+                pass
     
     if chat_id in user_review_state:
         del user_review_state[chat_id]
