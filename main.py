@@ -535,7 +535,7 @@ def handle_location(message):
     else:
         kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_sport_{sport}'))
     
-    # Отправляем список секций и УБИРАЕМ клавиатуру (без лишнего сообщения)
+    # Отправляем список секций
     bot.send_message(
         message.chat.id,
         text,
@@ -543,7 +543,7 @@ def handle_location(message):
         reply_markup=kb
     )
     
-    # Просто убираем клавиатуру без текста
+    # Убираем клавиатуру без лишнего сообщения
     bot.send_message(
         message.chat.id,
         '',
@@ -713,7 +713,10 @@ def ask_review(call):
     section_key = call.data.split('_', 1)[1]
     
     # Удаляем сообщение с карточкой
-    bot.delete_message(call.message.chat.id, call.message.message_id)
+    try:
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    except:
+        pass
     
     user_review_state[call.message.chat.id] = section_key
     
@@ -729,8 +732,17 @@ def ask_review(call):
     bot.register_next_step_handler(msg, save_review_with_rating, section_key)
 
 def save_review_with_rating(message, section_key):
+    # Если пользователь нажал "Назад" - обрабатываем отдельно
+    if message.text == '🔙 Назад':
+        if message.chat.id in user_review_state:
+            del user_review_state[message.chat.id]
+        text = get_section_card_text(section_key)
+        bot.send_message(message.chat.id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
+        return
+    
     text = message.text
     
+    # Пытаемся найти оценку в формате (5) или 5 в конце
     match = re.search(r'\((\d)\)', text)
     if match:
         rating = int(match.group(1))
@@ -742,7 +754,7 @@ def save_review_with_rating(message, section_key):
             comment = text.replace(str(rating), '').strip()
         else:
             # Ошибка - не найдена оценка
-            # Удаляем сообщение пользователя с ошибкой
+            # Удаляем сообщение пользователя
             try:
                 bot.delete_message(message.chat.id, message.message_id)
             except:
@@ -751,18 +763,19 @@ def save_review_with_rating(message, section_key):
             kb = types.InlineKeyboardMarkup()
             kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'cancel_review_{section_key}'))
             
-            # Отправляем новое сообщение с ошибкой (старое уже удалено)
+            # Отправляем сообщение с ошибкой
             msg = bot.send_message(
                 message.chat.id,
                 '❌ Не удалось найти оценку (1-5). Напишите отзыв с оценкой, например:\n"Отличная секция! (5)"\n\n<i>Или нажмите "Назад", чтобы вернуться</i>',
                 parse_mode='html',
                 reply_markup=kb
             )
+            # Снова ждём ответ
             bot.register_next_step_handler(msg, save_review_with_rating, section_key)
             return
     
+    # Проверяем рейтинг
     if rating < 1 or rating > 5:
-        # Удаляем сообщение пользователя с ошибкой
         try:
             bot.delete_message(message.chat.id, message.message_id)
         except:
@@ -780,17 +793,19 @@ def save_review_with_rating(message, section_key):
         bot.register_next_step_handler(msg, save_review_with_rating, section_key)
         return
     
-    # Удаляем сообщение с запросом отзыва
+    # Всё правильно - удаляем сообщение с запросом отзыва
     try:
         bot.delete_message(message.chat.id, message.message_id - 1)
     except:
         pass
-    # Удаляем сообщение пользователя с отзывом
+    
+    # Удаляем сообщение пользователя
     try:
         bot.delete_message(message.chat.id, message.message_id)
     except:
         pass
     
+    # Сохраняем отзыв
     result = save_review_to_db(section_key, message.from_user.id, rating, comment)
     
     if message.chat.id in user_review_state:
@@ -803,6 +818,7 @@ def save_review_with_rating(message, section_key):
         )
         return
     
+    # Показываем карточку с обновлённым рейтингом
     if result == 'updated':
         text_result = f'✅ Ваш отзыв обновлён! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
     else:
@@ -820,6 +836,7 @@ def cancel_review(call):
     section_key = call.data.split('_', 2)[2]
     chat_id = call.message.chat.id
     
+    # Удаляем сообщение с ошибкой или запросом отзыва
     try:
         bot.delete_message(chat_id, call.message.message_id)
     except:
@@ -828,6 +845,7 @@ def cancel_review(call):
     if chat_id in user_review_state:
         del user_review_state[chat_id]
     
+    # Показываем карточку
     text = get_section_card_text(section_key)
     bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
 
