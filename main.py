@@ -473,24 +473,16 @@ def back_to_martial_arts(call):
 @bot.message_handler(commands=['start'])
 def start(message):
     get_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
-    
-    kb = types.InlineKeyboardMarkup(row_width=3)
-    kb.add(
-        types.InlineKeyboardButton(text='⚽️ Футбол', callback_data='sport_football'),
-        types.InlineKeyboardButton(text='🏒 Хоккей', callback_data='sport_hockey'),
-        types.InlineKeyboardButton(text='🏀 Баскетбол', callback_data='sport_basketball')
-    )
-    kb.add(
-        types.InlineKeyboardButton(text='🥋 Единоборства', callback_data='sport_martial_arts'),
-        types.InlineKeyboardButton(text='🤾 Гандбол', callback_data='sport_handball'),
-        types.InlineKeyboardButton(text='🎾 Теннис', callback_data='sport_tennis')
-    )
-    kb.add(
-        types.InlineKeyboardButton(text='🏐 Волейбол', callback_data='sport_volleyball'),
-        types.InlineKeyboardButton(text='🏊 Плавание', callback_data='sport_swimming'),
-        types.InlineKeyboardButton(text='🤸 Гимнастика', callback_data='sport_gymnastics')
-    )
-    
+    kb = types.InlineKeyboardMarkup(row_width=2)
+    kb.add(types.InlineKeyboardButton(text='⚽️ Футбол', callback_data='sport_football'))
+    kb.add(types.InlineKeyboardButton(text='🏒 Хоккей', callback_data='sport_hockey'))
+    kb.add(types.InlineKeyboardButton(text='🏀 Баскетбол', callback_data='sport_basketball'))
+    kb.add(types.InlineKeyboardButton(text='🥋 Единоборства', callback_data='sport_martial_arts'))
+    kb.add(types.InlineKeyboardButton(text='🤾 Гандбол', callback_data='sport_handball'))
+    kb.add(types.InlineKeyboardButton(text='🎾 Теннис', callback_data='sport_tennis'))
+    kb.add(types.InlineKeyboardButton(text='🏐 Волейбол', callback_data='sport_volleyball'))
+    kb.add(types.InlineKeyboardButton(text='🏊 Плавание', callback_data='sport_swimming'))
+    kb.add(types.InlineKeyboardButton(text='🤸 Гимнастика', callback_data='sport_gymnastics'))
     bot.send_message(message.chat.id, '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>', parse_mode='html', reply_markup=kb)
 
 @bot.callback_query_handler(func=lambda call: call.data == 'back_to_main')
@@ -503,24 +495,16 @@ def back_to_main(call):
     except:
         pass
     get_user(call.from_user.id, call.from_user.username, call.from_user.first_name)
-    
-    kb = types.InlineKeyboardMarkup(row_width=3)
-    kb.add(
-        types.InlineKeyboardButton(text='⚽️ Футбол', callback_data='sport_football'),
-        types.InlineKeyboardButton(text='🏒 Хоккей', callback_data='sport_hockey'),
-        types.InlineKeyboardButton(text='🏀 Баскетбол', callback_data='sport_basketball')
-    )
-    kb.add(
-        types.InlineKeyboardButton(text='🥋 Единоборства', callback_data='sport_martial_arts'),
-        types.InlineKeyboardButton(text='🤾 Гандбол', callback_data='sport_handball'),
-        types.InlineKeyboardButton(text='🎾 Теннис', callback_data='sport_tennis')
-    )
-    kb.add(
-        types.InlineKeyboardButton(text='🏐 Волейбол', callback_data='sport_volleyball'),
-        types.InlineKeyboardButton(text='🏊 Плавание', callback_data='sport_swimming'),
-        types.InlineKeyboardButton(text='🤸 Гимнастика', callback_data='sport_gymnastics')
-    )
-    
+    kb = types.InlineKeyboardMarkup(row_width=2)
+    kb.add(types.InlineKeyboardButton(text='⚽️ Футбол', callback_data='sport_football'))
+    kb.add(types.InlineKeyboardButton(text='🏒 Хоккей', callback_data='sport_hockey'))
+    kb.add(types.InlineKeyboardButton(text='🏀 Баскетбол', callback_data='sport_basketball'))
+    kb.add(types.InlineKeyboardButton(text='🥋 Единоборства', callback_data='sport_martial_arts'))
+    kb.add(types.InlineKeyboardButton(text='🤾 Гандбол', callback_data='sport_handball'))
+    kb.add(types.InlineKeyboardButton(text='🎾 Теннис', callback_data='sport_tennis'))
+    kb.add(types.InlineKeyboardButton(text='🏐 Волейбол', callback_data='sport_volleyball'))
+    kb.add(types.InlineKeyboardButton(text='🏊 Плавание', callback_data='sport_swimming'))
+    kb.add(types.InlineKeyboardButton(text='🤸 Гимнастика', callback_data='sport_gymnastics'))
     bot.send_message(chat_id, '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>', parse_mode='html', reply_markup=kb)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('section_'))
