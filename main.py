@@ -187,7 +187,6 @@ add_default_admin()
 
 # ==== ФУНКЦИЯ РАСЧЁТА РАССТОЯНИЯ ====
 def calculate_distance(lat1, lon1, lat2, lon2):
-    """Расчёт расстояния между двумя точками на сфере (формула гаверсинусов)"""
     R = 6371
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
@@ -200,13 +199,11 @@ TOKEN = os.getenv('TELEGRAM_TOKEN', '6059734363:AAEPa7yL052gvPAOQEA22EaNP-_2T2Yy
 bot = telebot.TeleBot(TOKEN)
 bot.delete_webhook()
 
-# ==== НАСТРОЙКА МЕНЮ КОМАНД ====
 bot.set_my_commands([
     types.BotCommand("start", "Начать пользование"),
     types.BotCommand("admin", "Панель администратора"),
 ])
 
-# ==== ГЛОБАЛЬНЫЕ СЛОВАРИ ====
 user_location_data = {}
 user_review_state = {}
 user_location_state = {}
@@ -407,7 +404,6 @@ def ask_location(call):
 def handle_location(message):
     chat_id = message.chat.id
     
-    # Проверяем, есть ли состояние
     if chat_id not in user_location_state:
         bot.send_message(chat_id, '⚠️ Сначала нажмите "Найти рядом со мной" в меню!')
         return
@@ -418,12 +414,8 @@ def handle_location(message):
     user_lat = message.location.latitude
     user_lon = message.location.longitude
     
-    # Убираем клавиатуру
-    try:
-        bot.delete_message(chat_id, message.message_id - 1)
-    except:
-        pass
-    bot.send_message(chat_id, '⏳ Ищу ближайшие секции...', reply_markup=types.ReplyKeyboardRemove())
+    # Убираем клавиатуру без лишних сообщений
+    bot.send_message(chat_id, '', reply_markup=types.ReplyKeyboardRemove())
     
     conn = get_db_connection()
     cur = conn.cursor()
