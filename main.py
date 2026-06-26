@@ -243,8 +243,14 @@ def save_review_to_db(section_key, user_id, rating, comment):
     conn = get_db_connection()
     cur = conn.cursor()
     
+    # Проверяем, есть ли уже отзыв
     cur.execute("SELECT id FROM reviews WHERE section_key = ? AND user_id = ?", (section_key, user_id))
     existing = cur.fetchone()
+    
+    # Проверяем валидность рейтинга
+    if rating < 0 or rating > 5:
+        conn.close()
+        return 'error'
     
     if existing:
         cur.execute(
@@ -257,7 +263,7 @@ def save_review_to_db(section_key, user_id, rating, comment):
     else:
         cur.execute(
             "INSERT INTO reviews (section_key, user_id, rating, comment) VALUES (?, ?, ?, ?)",
-            (rating, comment, section_key, user_id)
+            (section_key, user_id, rating, comment)
         )
         conn.commit()
         conn.close()
@@ -763,6 +769,14 @@ def save_review_with_rating(message, section_key):
             )
             return
     
+    # Проверяем, что рейтинг в допустимом диапазоне
+    if rating < 1 or rating > 5:
+        bot.send_message(
+            message.chat.id,
+            '❌ Оценка должна быть от 1 до 5!'
+        )
+        return
+    
     try:
         bot.delete_message(message.chat.id, message.message_id - 1)
     except:
@@ -776,6 +790,13 @@ def save_review_with_rating(message, section_key):
     
     if message.chat.id in user_review_state:
         del user_review_state[message.chat.id]
+    
+    if result == 'error':
+        bot.send_message(
+            message.chat.id,
+            '❌ Ошибка при сохранении отзыва. Попробуйте ещё раз.'
+        )
+        return
     
     if result == 'updated':
         text = f'✅ Ваш отзыв обновлён! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
