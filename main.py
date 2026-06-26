@@ -6,7 +6,12 @@ import re
 import math
 import time
 
-# ==== ПОДКЛЮЧЕНИЕ К SQLite ====
+# ==== ВРЕМЕННО УДАЛЯЕМ СТАРУЮ БАЗУ ====
+if os.path.exists('sport_bot.db'):
+    os.remove('sport_bot.db')
+    print('🗑️ Старая база удалена')
+# ========================================
+
 DB_FILE = 'sport_bot.db'
 
 def get_db_connection():
@@ -162,12 +167,10 @@ def add_default_admin():
     
     conn.close()
 
-# ==== ИНИЦИАЛИЗАЦИЯ ====
 init_db()
 add_default_sections()
 add_default_admin()
 
-# ==== ФУНКЦИЯ РАСЧЁТА РАССТОЯНИЯ ====
 def calculate_distance(lat1, lon1, lat2, lon2):
     R = 6371
     dlat = math.radians(lat2 - lat1)
@@ -176,7 +179,6 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
     return R * c
 
-# ==== БОТ ====
 TOKEN = os.getenv('TELEGRAM_TOKEN', '6059734363:AAEPa7yL052gvPAOQEA22EaNP-_2T2Yy7Yg')
 bot = telebot.TeleBot(TOKEN)
 
@@ -188,8 +190,6 @@ bot.set_my_commands([
 user_location_data = {}
 user_review_state = {}
 user_location_state = {}
-
-# ==== ФУНКЦИИ РАБОТЫ С БД ====
 
 def get_section_data(section_key):
     conn = get_db_connection()
@@ -318,8 +318,6 @@ def location_keyboard_with_back_to_card(section_key):
     kb.add(types.InlineKeyboardButton(text='🔙 Назад к карточке', callback_data=f'back_to_card_{section_key}'))
     return kb
 
-# ==================== ФУНКЦИЯ ПОКАЗА СПИСКА СЕКЦИЙ ====================
-
 def show_sport_sections(chat_id, sport, message_id=None, parent_sport=None):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -367,8 +365,6 @@ def show_sport_sections(chat_id, sport, message_id=None, parent_sport=None):
     else:
         bot.send_message(chat_id, f'{icon} <b>Выбери секцию или найди рядом:</b>', parse_mode='html', reply_markup=kb)
 
-# ==================== ОБРАБОТЧИКИ ====================
-
 @bot.callback_query_handler(func=lambda call: call.data.startswith('find_near_'))
 def ask_location(call):
     sport = call.data.replace('find_near_', '')
@@ -395,7 +391,6 @@ def handle_location(message):
     user_lat = message.location.latitude
     user_lon = message.location.longitude
     
-    # Убираем клавиатуру
     bot.send_message(chat_id, '', reply_markup=types.ReplyKeyboardRemove())
     
     conn = get_db_connection()
@@ -578,8 +573,6 @@ def back_to_card(call):
     text = get_section_card_text(section_key)
     bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
 
-# ==================== ОТЗЫВ ====================
-
 @bot.callback_query_handler(func=lambda call: call.data.startswith('review_'))
 def ask_review(call):
     section_key = call.data.split('_', 1)[1]
@@ -693,8 +686,6 @@ def cancel_review(call):
     text = get_section_card_text(section_key)
     bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
 
-# ==================== ВСЕ ОТЗЫВЫ ====================
-
 @bot.callback_query_handler(func=lambda call: call.data.startswith('view_reviews_'))
 def view_reviews(call):
     section_key = call.data.replace('view_reviews_', '')
@@ -713,8 +704,6 @@ def view_reviews(call):
     kb = types.InlineKeyboardMarkup(row_width=1)
     kb.add(types.InlineKeyboardButton(text='🔙 Назад к карточке', callback_data=f'back_to_card_{section_key}'))
     bot.send_message(chat_id, text, parse_mode='html', reply_markup=kb)
-
-# ==================== АДМИН-ПАНЕЛЬ ====================
 
 @bot.message_handler(commands=['admin'])
 def admin_panel(message):
@@ -836,8 +825,6 @@ def admin_back(call):
     
     bot.edit_message_text(f'👑 <b>Панель администратора</b>\n\n<i>Вы управляете секцией:</i>\n<b>{section["name"]}</b>', call.message.chat.id, call.message.message_id, parse_mode='html', reply_markup=kb)
 
-# ==================== ОСНОВНОЙ ОБРАБОТЧИК ====================
-
 @bot.callback_query_handler(func=lambda callback: callback.data)
 def check_callback_data(callback):
     if callback.message and callback.data.startswith('sport_'):
@@ -858,7 +845,6 @@ def main(message):
 if __name__ == '__main__':
     print('🚀 Бот запущен!')
     
-    # Удаляем вебхук чтобы не было конфликта
     try:
         bot.remove_webhook()
         print('✅ Вебхук удалён')
