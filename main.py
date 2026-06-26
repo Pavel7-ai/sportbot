@@ -76,7 +76,7 @@ def add_default_sections():
         return
     
     sections = [
-        # ==== ФУТБОЛ (старые) ====
+        # ==== ФУТБОЛ ====
         ('football_konoplev', 'Академия футбола им.Юрия Коноплёва', 'Советская, 23б', '+78482559115 +78482559116', 'https://vk.com/konoplev_academy', 53.510405, 49.241506),
         ('football_lada', 'Футбольная школа "Лада"', 'Юбилейная, 6б (комплекс Спутник)\nРеволюционная, 80 (Стадион Торпедо)', '+78482371068 +78482580952', 'https://vk.com/public191471116', 53.504729, 49.268736),
         ('football_spartak', 'Футбольная школа "Спартак Юниор"', 'Южное шоссе, 2', '+78003010293 +79372123202', 'https://vk.com/fsspartak_tlt', 53.546357, 49.376147),
@@ -84,16 +84,16 @@ def add_default_sections():
         ('football_impuls', 'Футбольная школа "Импульс"', 'Цветной бульвар, 13 (Школа №82)\nТополиная, 18 (Школа №90)\nБульвар Татищева, 19 (Школа №90)\nБульвар Космонавтов, 17 (Школа №79)\n40 лет Победы, 74 (Школа №70)\n40 лет Победы, 86 (Школа №70)', '+79608460989 +78482409350', 'https://vk.com/fc.impuls', 53.543827, 49.343489),
         ('football_athletic', 'Футбольная школа "Athletic football"', 'Бульвар Луначарского, 11 (Школа №71)\nСвердлова, 23 (Школа №61)', '+79277851389 +78482326450', 'https://vk.com/athletic_football', 53.53065, 49.308502),
         
-        # ==== ХОККЕЙ (старые) ====
+        # ==== ХОККЕЙ ====
         ('hockey_flypro', 'Хоккейная школа "Fly pro"', '40 лет Победы, 14', '+79276163714', 'https://vk.com/flyagin_school', 53.54338, 49.365928),
         ('hockey_lada', 'Хоккейная школа "Лада"', 'Ботаническая, 5', '+78482526840', 'https://vk.com/lada.arena', 53.542877, 49.304098),
         ('hockey_volgar', 'Хоккейная школа "Волгарь"', 'Приморский бульвар, 37\nБаныкина, 9 (Стадион Кристалл)', '+78482347692', 'https://vk.com/volgar_tlt', 53.504946, 49.274819),
         
-        # ==== БАСКЕТБОЛ (старые) ====
+        # ==== БАСКЕТБОЛ ====
         ('basketball_redwings', 'Баскетбольная школа "Красные крылья"', 'Цветной бульвар, 18 (Школа №84)\n40 лет Победы, 106 (Школа №81)', '+78482692388 +78482692377', 'https://vk.com/tltredwings', 53.522605, 49.317724),
         ('basketball_phoenix', 'Баскетбольная школа "Феникс"', 'Фрунзе, 2г (ТГУ)\nБелорусская, 6а (ВУиТ)', '+79272110533', 'https://vk.com/basketboltlt', 53.513885, 49.302827),
         
-        # ==== БОКС (старые) ====
+        # ==== БОКС ====
         ('boxing_lotus', '"Lotusport\'s club r home"', 'Тополиная, 18 (Школа №90)', '+79277766212', 'https://vk.com/lsc63', 53.543811, 49.343596),
         ('boxing_vlasov', '"Школа бокса им. МСМК Игоря Власова"', 'Цветной бульвар, 18 (Школа №84)', '+79277887611 +79272185339', 'https://vk.com/vlasovboxing', 53.53814, 49.334691),
         ('boxing_gloves', '"Боевые перчатки"', 'Ворошилова, 21 (Школа №74)', '+78482429405', 'https://vk.com/public204222709', 53.535994, 49.317423),
@@ -102,10 +102,10 @@ def add_default_sections():
         ('boxing_school', '"Школа бокса"', 'Юбилейная, 81 (Школа №73)\nПриморский бульвар, 37 (Волгарь)', '+7848703455 +78482707450', 'https://vk.com/boxingschool163', 53.501564, 49.283241),
         ('boxing_albasport', '"Albasport"', 'Фермерская, 1а/1', '+78482580101', 'https://vk.com/albasport63', 53.522091, 49.192293),
         
-        # ==== ГАНДБОЛ (старые) ====
+        # ==== ГАНДБОЛ ====
         ('handball_lada', 'Гандбольный клуб "Лада"', 'Приморский бульвар, 49 (Олимп)\nБульвар Татищева, 19\n40 лет Победы, 74\nВорошилова, 21', '+78482357963 +78482355394 +79277800042', 'https://vk.com/public157271429', 53.507163, 49.25975),
         
-        # ==== БОЛЬШОЙ ТЕННИС (новые) ====
+        # ==== БОЛЬШОЙ ТЕННИС ====
         ('tennis_davis', 'Davis', 'Спортивная, 19', '+7 (8482) 39‒90‒00', 'https://vk.com/davis_sportclub', 53.50098, 49.260405),
         ('tennis_altek', 'Алтек', 'Маршала Жукова, 13', '+7 (8482) 33‒00‒43', 'https://vk.com/altektennis', 53.511738, 49.30692),
         ('tennis_kinderball', 'Kinder ball', 'Степана Разина проспект, 73', '+7‒906‒128‒12‒34', 'https://vk.com/kinderball163', 53.508589, 49.296566),
@@ -113,14 +113,14 @@ def add_default_sections():
         ('tennis_meteor', 'Метеор', 'Коммунистическая улица, 88', '+7 (8482) 97‒29‒72', 'https://vk.com/fokkomsa', 53.472451, 49.475942),
         ('tennis_paratennis', 'Паратеннис.рф', 'улица Карла Маркса, 37', '+7‒925‒235‒78‒36', 'https://vk.com/paratennisrf', 53.514976, 49.407803),
         
-        # ==== ВОЛЕЙБОЛ (новые) ====
+        # ==== ВОЛЕЙБОЛ ====
         ('volleyball_davis', 'Davis', 'Спортивная, 19', '+7 (8482) 39‒90‒00', 'https://vk.com/davis_sportclub', 53.50098, 49.260405),
         ('volleyball_start', 'Start Volley', 'Улица Карла Маркса, 37', '+7‒927‒217‒99‒96', 'https://vk.com/start_volley63', 53.514925, 49.407642),
         ('volleyball_akrobat', 'Акробат', 'Улица Баныкина, 22а', '+7 (8482) 69‒23‒40', 'https://vk.com/tltredwings', 53.503248, 49.427361),
         ('volleyball_mercury', 'Меркурий', 'Победы, 7', '+7‒987‒441‒98‒67', 'https://vk.com/vc_mercury', 53.531017, 49.430081),
         ('volleyball_tempo', 'Темпо', 'Улица Маршала Жукова, 15а', '+7‒905‒874‒45‒14', 'volleyball-school.ru/tolyatti', 53.508899, 49.306984),
         
-        # ==== ПЛАВАНИЕ (новые) ====
+        # ==== ПЛАВАНИЕ ====
         ('swimming_rusov', 'Школа плавания', 'Улица Маршала Жукова, 13Б ст1', '+7‒996‒469‒81‒26', 'https://vk.com/rusov__swim', 53.511451, 49.306034),
         ('swimming_cska', 'ЦСКА ВВС', 'Улица Ворошилова, 2а к1', '+7 (8482) 90‒43‒17', 'https://vk.com/club27571104', 53.538299, 49.313722),
         ('swimming_trud', 'Труд', 'Улица Карла Маркса, 37', '+7 (8482) 25‒94‒25', 'https://vk.com/trudtlt', 53.514905, 49.407663),
@@ -130,7 +130,7 @@ def add_default_sections():
         ('swimming_albasport', 'Albasport', 'Фермерская улица, 1а/1', '+7 (8482) 58‒01‒01', 'https://vk.com/albasport63', 53.522098, 49.192271),
         ('swimming_olimp', 'Олимп', 'Приморский бульвар, 49', '+7 (8482) 35‒53‒94', 'https://vk.com/club157271429', 53.507205, 49.259616),
         
-        # ==== ГИМНАСТИКА (новые) ====
+        # ==== ГИМНАСТИКА ====
         ('gymnastics_manezh', 'Легкоатлетический манеж', 'Спортивная улица, 40', '+7 (8482) 67‒77‒67', 'https://vk.com/manezh_tlt', 53.505507, 49.258136),
         ('gymnastics_olimp', 'Олимп', 'Приморский бульвар, 49', '+7 (8482) 35‒53‒94', 'https://vk.com/club157271429', 53.507205, 49.259616),
         ('gymnastics_ddyut', 'ДДЮТ', 'Степана Разина проспект, 99', '+7 (8482) 34‒33‒89', 'https://vk.com/dduttlt', 53.499069, 49.291974),
@@ -138,7 +138,7 @@ def add_default_sections():
         ('gymnastics_record', 'Рекорд', 'Улица Дзержинского, 27а', '+7 (8482) 789‒020', 'karatetlt.ru', 53.534087, 49.311227),
         ('gymnastics_kaskad', 'Каскад', 'Улица Ворошилова, 2а к1', '+7‒902‒373‒28‒43', 'https://vk.com/kaskad_rgym', 53.538328, 49.313722),
         
-        # ==== КАРАТЭ (новые) ====
+        # ==== КАРАТЭ ====
         ('karate_rave', 'Rave premium studio', 'Улица Маршала Жукова, 35г', '+7‒927‒784‒29‒79', 'https://vk.com/ravepremiumstudio', 53.503717, 49.302236),
         ('karate_katana', 'Катана', 'Улица Ворошилова, 2а к1', '+7 (8482) 90‒43‒17', 'https://vk.com/club27571104', 53.538299, 49.313722),
         ('karate_academy', 'Поволжская академия боевых искусств', 'Бульвар Космонавтов, 17', '+7‒917‒130‒87‒34', 'https://vk.com/club4442281', 53.536437, 49.322889),
@@ -179,13 +179,6 @@ def add_default_admin():
         print('ℹ️ Админ уже существует')
     
     conn.close()
-
-# ==== ВРЕМЕННО: УДАЛЯЕМ СТАРУЮ БАЗУ (если нужно пересоздать) ====
-# import os
-# if os.path.exists('sport_bot.db'):
-#     os.remove('sport_bot.db')
-#     print('🗑️ Старая база удалена')
-# =====================================
 
 # ==== ИНИЦИАЛИЗАЦИЯ ====
 init_db()
@@ -243,11 +236,9 @@ def save_review_to_db(section_key, user_id, rating, comment):
     conn = get_db_connection()
     cur = conn.cursor()
     
-    # Проверяем, есть ли уже отзыв
     cur.execute("SELECT id FROM reviews WHERE section_key = ? AND user_id = ?", (section_key, user_id))
     existing = cur.fetchone()
     
-    # Проверяем валидность рейтинга
     if rating < 0 or rating > 5:
         conn.close()
         return 'error'
@@ -365,7 +356,6 @@ def show_sport_sections(chat_id, sport, message_id=None, parent_sport=None):
     cur = conn.cursor()
     
     if sport == 'martial_arts':
-        # Для единоборств показываем подменю
         kb = types.InlineKeyboardMarkup(row_width=1)
         kb.add(types.InlineKeyboardButton('🥊 Бокс', callback_data='sport_boxing'))
         kb.add(types.InlineKeyboardButton('🥋 Каратэ', callback_data='sport_karate'))
@@ -422,7 +412,6 @@ def show_sport_sections(chat_id, sport, message_id=None, parent_sport=None):
         ))
     kb.add(types.InlineKeyboardButton('📍 Найти рядом со мной', callback_data=f'find_near_{sport}'))
     
-    # Если пришли из единоборств - возвращаемся в них
     if parent_sport == 'martial_arts':
         kb.add(types.InlineKeyboardButton('🔙 Назад к единоборствам', callback_data='back_to_martial_arts'))
     else:
@@ -541,18 +530,24 @@ def handle_location(message):
             callback_data=f'section_{section["key"]}'
         ))
     
-    # Определяем, из какого меню пришли
     if sport in ['boxing', 'karate']:
         kb.add(types.InlineKeyboardButton('🔙 Назад к единоборствам', callback_data='back_to_martial_arts'))
     else:
         kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_sport_{sport}'))
     
-    # Убираем клавиатуру и сразу показываем список секций
+    # Отправляем список секций с inline-кнопками
     bot.send_message(
         message.chat.id,
         text,
         parse_mode='html',
         reply_markup=kb
+    )
+    
+    # Убираем ReplyKeyboard (кнопки "Отправить местоположение" и "Отмена")
+    bot.send_message(
+        message.chat.id,
+        '✅ Кнопки убраны',
+        reply_markup=types.ReplyKeyboardRemove()
     )
 
 @bot.message_handler(func=lambda message: message.text == '❌ Отмена')
@@ -572,26 +567,22 @@ def back_to_sport(call):
     sport = call.data.replace('back_to_sport_', '')
     chat_id = call.message.chat.id
     
-    # Удаляем сообщение со списком секций
     try:
         bot.delete_message(chat_id, call.message.message_id)
     except:
         pass
     
-    # Показываем список секций заново
     show_sport_sections(chat_id, sport)
 
 @bot.callback_query_handler(func=lambda call: call.data == 'back_to_martial_arts')
 def back_to_martial_arts(call):
     chat_id = call.message.chat.id
     
-    # Удаляем сообщение со списком секций
     try:
         bot.delete_message(chat_id, call.message.message_id)
     except:
         pass
     
-    # Показываем меню единоборств
     show_sport_sections(chat_id, 'martial_arts')
 
 @bot.message_handler(commands=['start'])
@@ -676,7 +667,6 @@ def back_to_list(call):
     section_key = call.data.split('_', 3)[3]
     sport = section_key.split('_')[0]
     
-    # Проверяем, из единоборств ли пришли
     if sport in ['boxing', 'karate']:
         show_sport_sections(chat_id, sport, parent_sport='martial_arts')
     else:
@@ -716,7 +706,7 @@ def back_to_card(call):
     text = get_section_card_text(section_key)
     bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
 
-# ==================== ОТЗЫВ В ОДНОМ СООБЩЕНИИ ====================
+# ==================== ОТЗЫВ ====================
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('review_'))
 def ask_review(call):
@@ -737,19 +727,6 @@ def ask_review(call):
     )
     bot.register_next_step_handler(msg, save_review_with_rating, section_key)
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('cancel_review_'))
-def cancel_review(call):
-    section_key = call.data.split('_', 2)[2]
-    chat_id = call.message.chat.id
-    
-    bot.delete_message(chat_id, call.message.message_id)
-    
-    if chat_id in user_review_state:
-        del user_review_state[chat_id]
-    
-    text = get_section_card_text(section_key)
-    bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
-
 def save_review_with_rating(message, section_key):
     text = message.text
     
@@ -763,18 +740,40 @@ def save_review_with_rating(message, section_key):
             rating = int(match2.group(1))
             comment = text.replace(str(rating), '').strip()
         else:
-            bot.send_message(
+            # Ошибка - не найдена оценка
+            kb = types.InlineKeyboardMarkup()
+            kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'cancel_review_{section_key}'))
+            
+            try:
+                bot.delete_message(message.chat.id, message.message_id)
+            except:
+                pass
+            
+            msg = bot.send_message(
                 message.chat.id,
-                '❌ Не удалось найти оценку (1-5). Напишите отзыв с оценкой, например:\n"Отличная секция! (5)"'
+                '❌ Не удалось найти оценку (1-5). Напишите отзыв с оценкой, например:\n"Отличная секция! (5)"\n\n<i>Или нажмите "Назад", чтобы вернуться</i>',
+                parse_mode='html',
+                reply_markup=kb
             )
+            bot.register_next_step_handler(msg, save_review_with_rating, section_key)
             return
     
-    # Проверяем, что рейтинг в допустимом диапазоне
     if rating < 1 or rating > 5:
-        bot.send_message(
+        kb = types.InlineKeyboardMarkup()
+        kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'cancel_review_{section_key}'))
+        
+        try:
+            bot.delete_message(message.chat.id, message.message_id)
+        except:
+            pass
+        
+        msg = bot.send_message(
             message.chat.id,
-            '❌ Оценка должна быть от 1 до 5!'
+            '❌ Оценка должна быть от 1 до 5!\n\n<i>Напишите отзыв с оценкой, например: "Отличная секция! (5)"</i>',
+            parse_mode='html',
+            reply_markup=kb
         )
+        bot.register_next_step_handler(msg, save_review_with_rating, section_key)
         return
     
     try:
@@ -799,16 +798,32 @@ def save_review_with_rating(message, section_key):
         return
     
     if result == 'updated':
-        text = f'✅ Ваш отзыв обновлён! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
+        text_result = f'✅ Ваш отзыв обновлён! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
     else:
-        text = f'✅ Спасибо за ваш отзыв! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
+        text_result = f'✅ Спасибо за ваш отзыв! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
     
     bot.send_message(
         message.chat.id,
-        text,
+        text_result,
         parse_mode='html',
         reply_markup=section_keyboard(section_key)
     )
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('cancel_review_'))
+def cancel_review(call):
+    section_key = call.data.split('_', 2)[2]
+    chat_id = call.message.chat.id
+    
+    try:
+        bot.delete_message(chat_id, call.message.message_id)
+    except:
+        pass
+    
+    if chat_id in user_review_state:
+        del user_review_state[chat_id]
+    
+    text = get_section_card_text(section_key)
+    bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
 
 # ==================== ВСЕ ОТЗЫВЫ ====================
 
