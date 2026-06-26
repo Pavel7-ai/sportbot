@@ -76,25 +76,76 @@ def add_default_sections():
         return
     
     sections = [
-        ('football_konoplev', 'Академия футбола им.Юрия Коноплёва', 'Советская, 23б', '+78482559115 +78482559116', 'https://vk.com/konoplev_academy', 53.4805, 49.3874),
-        ('football_lada', 'Футбольная школа "Лада"', 'Юбилейная, 6б (комплекс Спутник)\nРеволюционная, 80 (Стадион Торпедо)', '+78482371068 +78482580952', 'https://vk.com/public191471116', 53.5078, 49.4203),
-        ('football_spartak', 'Футбольная школа "Спартак Юниор"', 'Южное шоссе, 2', '+78003010293 +79372123202', 'https://vk.com/fsspartak_tlt', 53.5142, 49.4251),
-        ('football_galacticos', 'Футбольная школа "Галактикос"', 'Тополиная, 5\nАвтостроителей, 84 (Школа №66)\nБульвар Туполева, 12 (Школа №47)\nБульвар Королёва, 3 (Школа им. Королёва)\nСтепана Разина, 78 (Лицей №76)', '+79278922080 +78482341015', 'https://vk.com/fs_galacticos', 53.5200, 49.4000),
-        ('football_impuls', 'Футбольная школа "Импульс"', 'Цветной бульвар, 13 (Школа №82)\nТополиная, 18 (Школа №90)\nБульвар Татищева, 19 (Школа №90)\nБульвар Космонавтов, 17 (Школа №79)\n40 лет Победы, 74 (Школа №70)\n40 лет Победы, 86 (Школа №70)', '+79608460989 +78482409350', 'https://vk.com/fc.impuls', 53.4900, 49.4100),
-        ('football_athletic', 'Футбольная школа "Athletic football"', 'Бульвар Луначарского, 11 (Школа №71)\nСвердлова, 23 (Школа №61)', '+79277851389 +78482326450', 'https://vk.com/athletic_football', 53.5000, 49.4300),
-        ('hockey_flypro', 'Хоккейная школа "Fly pro"', '40 лет Победы, 14', '+79276163714', 'https://vk.com/flyagin_school', 53.5100, 49.4400),
-        ('hockey_lada', 'Хоккейная школа "Лада"', 'Ботаническая, 5', '+78482526840', 'https://vk.com/lada.arena', 53.5300, 49.3800),
-        ('hockey_volgar', 'Хоккейная школа "Волгарь"', 'Приморский бульвар, 37\nБаныкина, 9 (Стадион Кристалл)', '+78482347692', 'https://vk.com/volgar_tlt', 53.5400, 49.3600),
-        ('basketball_redwings', 'Баскетбольная школа "Красные крылья"', 'Цветной бульвар, 18 (Школа №84)\n40 лет Победы, 106 (Школа №81)', '+78482692388 +78482692377', 'https://vk.com/tltredwings', 53.5000, 49.4500),
-        ('basketball_phoenix', 'Баскетбольная школа "Феникс"', 'Фрунзе, 2г (ТГУ)\nБелорусская, 6а (ВУиТ)', '+79272110533', 'https://vk.com/basketboltlt', 53.4800, 49.4600),
-        ('boxing_lotus', '"Lotusport\'s club r home"', 'Тополиная, 18 (Школа №90)', '+79277766212', 'https://vk.com/lsc63', 53.5200, 49.3900),
-        ('boxing_vlasov', '"Школа бокса им. МСМК Игоря Власова"', 'Цветной бульвар, 18 (Школа №84)', '+79277887611 +79272185339', 'https://vk.com/vlasovboxing', 53.4900, 49.4200),
-        ('boxing_gloves', '"Боевые перчатки"', 'Ворошилова, 21 (Школа №74)', '+78482429405', 'https://vk.com/public204222709', 53.5000, 49.4100),
-        ('boxing_gaidarovets', '"Гайдаровец"', 'Фрунзе, 35', '+79272116655', 'https://vk.com/tolyattiboxing', 53.4700, 49.4300),
-        ('boxing_pobeda', '"Победа-спорт"', 'Маршала Жукова, 26', '+78482417363 +78482290002', 'https://vk.com/ksepobeda', 53.4900, 49.4500),
-        ('boxing_school', '"Школа бокса"', 'Юбилейная, 81 (Школа №73)\nПриморский бульвар, 37 (Волгарь)', '+7848703455 +78482707450', 'https://vk.com/boxingschool163', 53.5000, 49.4600),
-        ('boxing_albasport', '"Albasport"', 'Фермерская, 1а/1', '+78482580101', 'https://vk.com/albasport63', 53.5100, 49.4700),
-        ('handball_lada', 'Гандбольный клуб "Лада"', 'Приморский бульвар, 49 (Олимп)\nБульвар Татищева, 19\n40 лет Победы, 74\nВорошилова, 21', '+78482357963 +78482355394 +79277800042', 'https://vk.com/public157271429', 53.5300, 49.3500),
+        # ==== ФУТБОЛ (старые) ====
+        ('football_konoplev', 'Академия футбола им.Юрия Коноплёва', 'Советская, 23б', '+78482559115 +78482559116', 'https://vk.com/konoplev_academy', 53.510405, 49.241506),
+        ('football_lada', 'Футбольная школа "Лада"', 'Юбилейная, 6б (комплекс Спутник)\nРеволюционная, 80 (Стадион Торпедо)', '+78482371068 +78482580952', 'https://vk.com/public191471116', 53.504729, 49.268736),
+        ('football_spartak', 'Футбольная школа "Спартак Юниор"', 'Южное шоссе, 2', '+78003010293 +79372123202', 'https://vk.com/fsspartak_tlt', 53.546357, 49.376147),
+        ('football_galacticos', 'Футбольная школа "Галактикос"', 'Тополиная, 5\nАвтостроителей, 84 (Школа №66)\nБульвар Туполева, 12 (Школа №47)\nБульвар Королёва, 3 (Школа им. Королёва)\nСтепана Разина, 78 (Лицей №76)', '+79278922080 +78482341015', 'https://vk.com/fs_galacticos', 53.545172, 49.35109),
+        ('football_impuls', 'Футбольная школа "Импульс"', 'Цветной бульвар, 13 (Школа №82)\nТополиная, 18 (Школа №90)\nБульвар Татищева, 19 (Школа №90)\nБульвар Космонавтов, 17 (Школа №79)\n40 лет Победы, 74 (Школа №70)\n40 лет Победы, 86 (Школа №70)', '+79608460989 +78482409350', 'https://vk.com/fc.impuls', 53.543827, 49.343489),
+        ('football_athletic', 'Футбольная школа "Athletic football"', 'Бульвар Луначарского, 11 (Школа №71)\nСвердлова, 23 (Школа №61)', '+79277851389 +78482326450', 'https://vk.com/athletic_football', 53.53065, 49.308502),
+        
+        # ==== ХОККЕЙ (старые) ====
+        ('hockey_flypro', 'Хоккейная школа "Fly pro"', '40 лет Победы, 14', '+79276163714', 'https://vk.com/flyagin_school', 53.54338, 49.365928),
+        ('hockey_lada', 'Хоккейная школа "Лада"', 'Ботаническая, 5', '+78482526840', 'https://vk.com/lada.arena', 53.542877, 49.304098),
+        ('hockey_volgar', 'Хоккейная школа "Волгарь"', 'Приморский бульвар, 37\nБаныкина, 9 (Стадион Кристалл)', '+78482347692', 'https://vk.com/volgar_tlt', 53.504946, 49.274819),
+        
+        # ==== БАСКЕТБОЛ (старые) ====
+        ('basketball_redwings', 'Баскетбольная школа "Красные крылья"', 'Цветной бульвар, 18 (Школа №84)\n40 лет Победы, 106 (Школа №81)', '+78482692388 +78482692377', 'https://vk.com/tltredwings', 53.522605, 49.317724),
+        ('basketball_phoenix', 'Баскетбольная школа "Феникс"', 'Фрунзе, 2г (ТГУ)\nБелорусская, 6а (ВУиТ)', '+79272110533', 'https://vk.com/basketboltlt', 53.513885, 49.302827),
+        
+        # ==== БОКС (старые) ====
+        ('boxing_lotus', '"Lotusport\'s club r home"', 'Тополиная, 18 (Школа №90)', '+79277766212', 'https://vk.com/lsc63', 53.543811, 49.343596),
+        ('boxing_vlasov', '"Школа бокса им. МСМК Игоря Власова"', 'Цветной бульвар, 18 (Школа №84)', '+79277887611 +79272185339', 'https://vk.com/vlasovboxing', 53.53814, 49.334691),
+        ('boxing_gloves', '"Боевые перчатки"', 'Ворошилова, 21 (Школа №74)', '+78482429405', 'https://vk.com/public204222709', 53.535994, 49.317423),
+        ('boxing_gaidarovets', '"Гайдаровец"', 'Фрунзе, 35', '+79272116655', 'https://vk.com/tolyattiboxing', 53.515218, 49.268575),
+        ('boxing_pobeda', '"Победа-спорт"', 'Маршала Жукова, 26', '+78482417363 +78482290002', 'https://vk.com/ksepobeda', 53.509859, 49.301067),
+        ('boxing_school', '"Школа бокса"', 'Юбилейная, 81 (Школа №73)\nПриморский бульвар, 37 (Волгарь)', '+7848703455 +78482707450', 'https://vk.com/boxingschool163', 53.501564, 49.283241),
+        ('boxing_albasport', '"Albasport"', 'Фермерская, 1а/1', '+78482580101', 'https://vk.com/albasport63', 53.522091, 49.192293),
+        
+        # ==== ГАНДБОЛ (старые) ====
+        ('handball_lada', 'Гандбольный клуб "Лада"', 'Приморский бульвар, 49 (Олимп)\nБульвар Татищева, 19\n40 лет Победы, 74\nВорошилова, 21', '+78482357963 +78482355394 +79277800042', 'https://vk.com/public157271429', 53.507163, 49.25975),
+        
+        # ==== БОЛЬШОЙ ТЕННИС (новые) ====
+        ('tennis_davis', 'Davis', 'Спортивная, 19', '+7 (8482) 39‒90‒00', 'https://vk.com/davis_sportclub', 53.50098, 49.260405),
+        ('tennis_altek', 'Алтек', 'Маршала Жукова, 13', '+7 (8482) 33‒00‒43', 'https://vk.com/altektennis', 53.511738, 49.30692),
+        ('tennis_kinderball', 'Kinder ball', 'Степана Разина проспект, 73', '+7‒906‒128‒12‒34', 'https://vk.com/kinderball163', 53.508589, 49.296566),
+        ('tennis_albasport', 'Albasport', 'Фермерская улица, 1а/1', '+7 (8482) 58‒01‒01', 'https://vk.com/albasport63', 53.522098, 49.192271),
+        ('tennis_meteor', 'Метеор', 'Коммунистическая улица, 88', '+7 (8482) 97‒29‒72', 'https://vk.com/fokkomsa', 53.472451, 49.475942),
+        ('tennis_paratennis', 'Паратеннис.рф', 'улица Карла Маркса, 37', '+7‒925‒235‒78‒36', 'https://vk.com/paratennisrf', 53.514976, 49.407803),
+        
+        # ==== ВОЛЕЙБОЛ (новые) ====
+        ('volleyball_davis', 'Davis', 'Спортивная, 19', '+7 (8482) 39‒90‒00', 'https://vk.com/davis_sportclub', 53.50098, 49.260405),
+        ('volleyball_start', 'Start Volley', 'Улица Карла Маркса, 37', '+7‒927‒217‒99‒96', 'https://vk.com/start_volley63', 53.514925, 49.407642),
+        ('volleyball_akrobat', 'Акробат', 'Улица Баныкина, 22а', '+7 (8482) 69‒23‒40', 'https://vk.com/tltredwings', 53.503248, 49.427361),
+        ('volleyball_mercury', 'Меркурий', 'Победы, 7', '+7‒987‒441‒98‒67', 'https://vk.com/vc_mercury', 53.531017, 49.430081),
+        ('volleyball_tempo', 'Темпо', 'Улица Маршала Жукова, 15а', '+7‒905‒874‒45‒14', 'volleyball-school.ru/tolyatti', 53.508899, 49.306984),
+        
+        # ==== ПЛАВАНИЕ (новые) ====
+        ('swimming_rusov', 'Школа плавания', 'Улица Маршала Жукова, 13Б ст1', '+7‒996‒469‒81‒26', 'https://vk.com/rusov__swim', 53.511451, 49.306034),
+        ('swimming_cska', 'ЦСКА ВВС', 'Улица Ворошилова, 2а к1', '+7 (8482) 90‒43‒17', 'https://vk.com/club27571104', 53.538299, 49.313722),
+        ('swimming_trud', 'Труд', 'Улица Карла Маркса, 37', '+7 (8482) 25‒94‒25', 'https://vk.com/trudtlt', 53.514905, 49.407663),
+        ('swimming_neuron', 'Нейрон', 'Кавалерийский проезд, 20', '+7‒903‒333‒03‒05', 'https://vk.com/neuron_tlt', 53.537623, 49.388807),
+        ('swimming_tgu', 'Тольяттинский государственный университет', 'Улица Ушакова, 61', '+7 (8482) 44‒92‒09', 'https://vk.com/basseintgu', 53.498934, 49.401178),
+        ('swimming_meteor', 'Метеор', 'Коммунистическая улица, 88', '+7 (8482) 97‒29‒72', 'https://vk.com/fokkomsa', 53.472451, 49.475942),
+        ('swimming_albasport', 'Albasport', 'Фермерская улица, 1а/1', '+7 (8482) 58‒01‒01', 'https://vk.com/albasport63', 53.522098, 49.192271),
+        ('swimming_olimp', 'Олимп', 'Приморский бульвар, 49', '+7 (8482) 35‒53‒94', 'https://vk.com/club157271429', 53.507205, 49.259616),
+        
+        # ==== ГИМНАСТИКА (новые) ====
+        ('gymnastics_manezh', 'Легкоатлетический манеж', 'Спортивная улица, 40', '+7 (8482) 67‒77‒67', 'https://vk.com/manezh_tlt', 53.505507, 49.258136),
+        ('gymnastics_olimp', 'Олимп', 'Приморский бульвар, 49', '+7 (8482) 35‒53‒94', 'https://vk.com/club157271429', 53.507205, 49.259616),
+        ('gymnastics_ddyut', 'ДДЮТ', 'Степана Разина проспект, 99', '+7 (8482) 34‒33‒89', 'https://vk.com/dduttlt', 53.499069, 49.291974),
+        ('gymnastics_alyans', 'Альянс', 'Бульвар Курчатова, 15', '+7‒927‒619‒69‒10', 'https://vk.com/aliyns1', 53.530587, 49.293551),
+        ('gymnastics_record', 'Рекорд', 'Улица Дзержинского, 27а', '+7 (8482) 789‒020', 'karatetlt.ru', 53.534087, 49.311227),
+        ('gymnastics_kaskad', 'Каскад', 'Улица Ворошилова, 2а к1', '+7‒902‒373‒28‒43', 'https://vk.com/kaskad_rgym', 53.538328, 49.313722),
+        
+        # ==== КАРАТЭ (новые) ====
+        ('karate_rave', 'Rave premium studio', 'Улица Маршала Жукова, 35г', '+7‒927‒784‒29‒79', 'https://vk.com/ravepremiumstudio', 53.503717, 49.302236),
+        ('karate_katana', 'Катана', 'Улица Ворошилова, 2а к1', '+7 (8482) 90‒43‒17', 'https://vk.com/club27571104', 53.538299, 49.313722),
+        ('karate_academy', 'Поволжская академия боевых искусств', 'Бульвар Космонавтов, 17', '+7‒917‒130‒87‒34', 'https://vk.com/club4442281', 53.536437, 49.322889),
+        ('karate_record', 'Рекорд', 'Улица Дзержинского, 27а', '+7 (8482) 789‒020', 'karatetlt.ru', 53.534087, 49.311227),
+        ('karate_sk', 'СК Karate', 'улица Автостроителей, 50а', '+7‒937‒216‒52‒96', 'https://vk.com/sckarate', 53.536919, 49.327481),
+        ('karate_soyuz', 'Союз', 'Бульвар Кулибина, 13а', '+7 (8482) 37‒91‒26', 'https://vk.com/soyuztlt', 53.532586, 49.273553),
+        ('karate_master', 'Мастер', 'Улица Автостроителей, 84', '+7‒927‒786‒15‒85', 'https://vk.com/wkf_tlt_karate', 53.530306, 49.324236),
     ]
     
     for section in sections:
@@ -199,7 +250,7 @@ def save_review_to_db(section_key, user_id, rating, comment):
     else:
         cur.execute(
             "INSERT INTO reviews (section_key, user_id, rating, comment) VALUES (?, ?, ?, ?)",
-            (section_key, user_id, rating, comment)
+            (rating, comment, section_key, user_id)
         )
         conn.commit()
         conn.close()
@@ -232,29 +283,6 @@ def get_user(telegram_id, username=None, first_name=None):
     conn.close()
     return user
 
-# ==== СЛОВАРЬ ДЛЯ ТЕКСТОВ СЕКЦИЙ ====
-section_texts = {
-    'football_konoplev': ('⚽️ Академия футбола им.Юрия Коноплёва', 'Советская, 23б\n📞 +78482559115 +78482559116\n🔗 https://vk.com/konoplev_academy'),
-    'football_lada': ('⚽️ Футбольная школа "Лада"', 'Юбилейная, 6б (комплекс Спутник)\nРеволюционная, 80 (Стадион Торпедо)\n📞 +78482371068 +78482580952\n🔗 https://vk.com/public191471116'),
-    'football_spartak': ('⚽️ Футбольная школа "Спартак Юниор"', 'Южное шоссе, 2\n📞 +78003010293 +79372123202\n🔗 https://vk.com/fsspartak_tlt'),
-    'football_galacticos': ('⚽️ Футбольная школа "Галактикос"', 'Тополиная, 5\nАвтостроителей, 84 (Школа №66)\nБульвар Туполева, 12 (Школа №47)\nБульвар Королёва, 3 (Школа им. Королёва)\nСтепана Разина, 78 (Лицей №76)\n📞 +79278922080 +78482341015\n🔗 https://vk.com/fs_galacticos'),
-    'football_impuls': ('⚽️ Футбольная школа "Импульс"', 'Цветной бульвар, 13 (Школа №82)\nТополиная, 18 (Школа №90)\nБульвар Татищева, 19 (Школа №90)\nБульвар Космонавтов, 17 (Школа №79)\n40 лет Победы, 74 (Школа №70)\n40 лет Победы, 86 (Школа №70)\n📞 +79608460989 +78482409350\n🔗 https://vk.com/fc.impuls'),
-    'football_athletic': ('⚽️ Футбольная школа "Athletic football"', 'Бульвар Луначарского, 11 (Школа №71)\nСвердлова, 23 (Школа №61)\n📞 +79277851389 +78482326450\n🔗 https://vk.com/athletic_football'),
-    'hockey_flypro': ('🏒 Хоккейная школа "Fly pro"', '40 лет Победы, 14\n📞 +79276163714\n🔗 https://vk.com/flyagin_school'),
-    'hockey_lada': ('🏒 Хоккейная школа "Лада"', 'Ботаническая, 5\n📞 +78482526840\n🔗 https://vk.com/lada.arena'),
-    'hockey_volgar': ('🏒 Хоккейная школа "Волгарь"', 'Приморский бульвар, 37\nБаныкина, 9 (Стадион Кристалл)\n📞 +78482347692\n🔗 https://vk.com/volgar_tlt'),
-    'basketball_redwings': ('🏀 Баскетбольная школа "Красные крылья"', 'Цветной бульвар, 18 (Школа №84)\n40 лет Победы, 106 (Школа №81)\n📞 +78482692388 +78482692377\n🔗 https://vk.com/tltredwings'),
-    'basketball_phoenix': ('🏀 Баскетбольная школа "Феникс"', 'Фрунзе, 2г (ТГУ)\nБелорусская, 6а (ВУиТ)\n📞 +79272110533\n🔗 https://vk.com/basketboltlt'),
-    'boxing_lotus': ('🥊 "Lotusport\'s club r home"', 'Тополиная, 18 (Школа №90)\n📞 +79277766212\n🔗 https://vk.com/lsc63'),
-    'boxing_vlasov': ('🥊 "Школа бокса им. МСМК Игоря Власова"', 'Цветной бульвар, 18 (Школа №84)\n📞 +79277887611 +79272185339\n🔗 https://vk.com/vlasovboxing'),
-    'boxing_gloves': ('🥊 "Боевые перчатки"', 'Ворошилова, 21 (Школа №74)\n📞 +78482429405\n🔗 https://vk.com/public204222709'),
-    'boxing_gaidarovets': ('🥊 "Гайдаровец"', 'Фрунзе, 35\n📞 +79272116655\n🔗 https://vk.com/tolyattiboxing'),
-    'boxing_pobeda': ('🥊 "Победа-спорт"', 'Маршала Жукова, 26\n📞 +78482417363 +78482290002\n🔗 https://vk.com/ksepobeda'),
-    'boxing_school': ('🥊 "Школа бокса"', 'Юбилейная, 81 (Школа №73)\nПриморский бульвар, 37 (Волгарь)\n📞 +7848703455 +78482707450\n🔗 https://vk.com/boxingschool163'),
-    'boxing_albasport': ('🥊 "Albasport"', 'Фермерская, 1а/1\n📞 +78482580101\n🔗 https://vk.com/albasport63'),
-    'handball_lada': ('🤾 Гандбольный клуб "Лада"', 'Приморский бульвар, 49 (Олимп)\nБульвар Татищева, 19\n40 лет Победы, 74\nВорошилова, 21\n📞 +78482357963 +78482355394 +79277800042\n🔗 https://vk.com/public157271429'),
-}
-
 def format_rating(section_key):
     data = get_section_rating(section_key)
     rating = data['rating']
@@ -274,7 +302,12 @@ def get_section_card_text(section_key):
         'hockey': '🏒',
         'basketball': '🏀',
         'boxing': '🥊',
-        'handball': '🤾'
+        'karate': '🥋',
+        'handball': '🤾',
+        'tennis': '🎾',
+        'volleyball': '🏐',
+        'swimming': '🏊',
+        'gymnastics': '🤸'
     }
     sport = section_key.split('_')[0]
     icon = sport_icons.get(sport, '🏆')
@@ -311,12 +344,38 @@ def location_keyboard_with_back_to_card(section_key):
     kb.add(types.InlineKeyboardButton(text='🔙 Назад к карточке', callback_data=f'back_to_card_{section_key}'))
     return kb
 
-# ==================== ФУНКЦИЯ ПОКАЗА СПИСКА СЕКЦИЙ С КНОПКОЙ "НАЙТИ РЯДОМ" ====================
+# ==================== ФУНКЦИЯ ПОКАЗА СПИСКА СЕКЦИЙ ====================
 
-def show_sport_sections(chat_id, sport, message_id=None):
-    """Показывает список секций по виду спорта с кнопкой 'Найти рядом'"""
+def show_sport_sections(chat_id, sport, message_id=None, parent_sport=None):
+    """Показывает список секций по виду спорта"""
     conn = get_db_connection()
     cur = conn.cursor()
+    
+    if sport == 'martial_arts':
+        # Для единоборств показываем подменю
+        kb = types.InlineKeyboardMarkup(row_width=1)
+        kb.add(types.InlineKeyboardButton('🥊 Бокс', callback_data='sport_boxing'))
+        kb.add(types.InlineKeyboardButton('🥋 Каратэ', callback_data='sport_karate'))
+        kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_main'))
+        
+        if message_id:
+            bot.edit_message_text(
+                '🥋 <b>Выберите вид единоборств:</b>',
+                chat_id,
+                message_id,
+                parse_mode='html',
+                reply_markup=kb
+            )
+        else:
+            bot.send_message(
+                chat_id,
+                '🥋 <b>Выберите вид единоборств:</b>',
+                parse_mode='html',
+                reply_markup=kb
+            )
+        conn.close()
+        return
+    
     cur.execute(
         "SELECT key, name, lat, lon FROM sections WHERE key LIKE ? ORDER BY name",
         (f'{sport}_%',)
@@ -333,7 +392,12 @@ def show_sport_sections(chat_id, sport, message_id=None):
         'hockey': '🏒',
         'basketball': '🏀',
         'boxing': '🥊',
-        'handball': '🤾'
+        'karate': '🥋',
+        'handball': '🤾',
+        'tennis': '🎾',
+        'volleyball': '🏐',
+        'swimming': '🏊',
+        'gymnastics': '🤸'
     }
     icon = sport_icons.get(sport, '🏆')
     
@@ -344,7 +408,12 @@ def show_sport_sections(chat_id, sport, message_id=None):
             callback_data=f'section_{section["key"]}'
         ))
     kb.add(types.InlineKeyboardButton('📍 Найти рядом со мной', callback_data=f'find_near_{sport}'))
-    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_main'))
+    
+    # Если пришли из единоборств - возвращаемся в них
+    if parent_sport == 'martial_arts':
+        kb.add(types.InlineKeyboardButton('🔙 Назад к единоборствам', callback_data='back_to_martial_arts'))
+    else:
+        kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_main'))
     
     if message_id:
         bot.edit_message_text(
@@ -439,7 +508,12 @@ def handle_location(message):
         'hockey': '🏒',
         'basketball': '🏀',
         'boxing': '🥊',
-        'handball': '🤾'
+        'karate': '🥋',
+        'handball': '🤾',
+        'tennis': '🎾',
+        'volleyball': '🏐',
+        'swimming': '🏊',
+        'gymnastics': '🤸'
     }
     icon = sport_icons.get(sport, '🏆')
     
@@ -454,7 +528,11 @@ def handle_location(message):
             callback_data=f'section_{section["key"]}'
         ))
     
-    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_sport_{sport}'))
+    # Определяем, из какого меню пришли
+    if sport in ['boxing', 'karate']:
+        kb.add(types.InlineKeyboardButton('🔙 Назад к единоборствам', callback_data='back_to_martial_arts'))
+    else:
+        kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_sport_{sport}'))
     
     bot.send_message(
         message.chat.id,
@@ -487,17 +565,31 @@ def back_to_sport(call):
     bot.delete_message(call.message.chat.id, call.message.message_id)
     show_sport_sections(call.message.chat.id, sport)
 
+@bot.callback_query_handler(func=lambda call: call.data == 'back_to_martial_arts')
+def back_to_martial_arts(call):
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+    show_sport_sections(call.message.chat.id, 'martial_arts')
+
 @bot.message_handler(commands=['start'])
 def start(message):
     get_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
     kb = types.InlineKeyboardMarkup(row_width=2)
-    btn1 = types.InlineKeyboardButton(text='Футбол⚽️', callback_data='btn1')
-    btn2 = types.InlineKeyboardButton(text='Хоккей🏒', callback_data='btn2')
-    btn3 = types.InlineKeyboardButton(text='Баскетбол🏀', callback_data='btn3')
-    btn4 = types.InlineKeyboardButton(text='Бокс🥊', callback_data='btn4')
-    btn5 = types.InlineKeyboardButton(text='Гандбол🤾', callback_data='btn5')
-    kb.add(btn1, btn2, btn3, btn4, btn5)
-    bot.send_message(message.chat.id, '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>', parse_mode='html', reply_markup=kb)
+    btn1 = types.InlineKeyboardButton(text='Футбол ⚽️', callback_data='sport_football')
+    btn2 = types.InlineKeyboardButton(text='Хоккей 🏒', callback_data='sport_hockey')
+    btn3 = types.InlineKeyboardButton(text='Баскетбол 🏀', callback_data='sport_basketball')
+    btn4 = types.InlineKeyboardButton(text='Единоборства 🥋', callback_data='sport_martial_arts')
+    btn5 = types.InlineKeyboardButton(text='Гандбол 🤾', callback_data='sport_handball')
+    btn6 = types.InlineKeyboardButton(text='Теннис 🎾', callback_data='sport_tennis')
+    btn7 = types.InlineKeyboardButton(text='Волейбол 🏐', callback_data='sport_volleyball')
+    btn8 = types.InlineKeyboardButton(text='Плавание 🏊', callback_data='sport_swimming')
+    btn9 = types.InlineKeyboardButton(text='Гимнастика 🤸', callback_data='sport_gymnastics')
+    kb.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9)
+    bot.send_message(
+        message.chat.id,
+        '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>',
+        parse_mode='html',
+        reply_markup=kb
+    )
 
 @bot.callback_query_handler(func=lambda call: call.data == 'back_to_main')
 def back_to_main(call):
@@ -511,12 +603,16 @@ def back_to_main(call):
     
     get_user(call.from_user.id, call.from_user.username, call.from_user.first_name)
     kb = types.InlineKeyboardMarkup(row_width=2)
-    btn1 = types.InlineKeyboardButton(text='Футбол⚽️', callback_data='btn1')
-    btn2 = types.InlineKeyboardButton(text='Хоккей🏒', callback_data='btn2')
-    btn3 = types.InlineKeyboardButton(text='Баскетбол🏀', callback_data='btn3')
-    btn4 = types.InlineKeyboardButton(text='Бокс🥊', callback_data='btn4')
-    btn5 = types.InlineKeyboardButton(text='Гандбол🤾', callback_data='btn5')
-    kb.add(btn1, btn2, btn3, btn4, btn5)
+    btn1 = types.InlineKeyboardButton(text='Футбол ⚽️', callback_data='sport_football')
+    btn2 = types.InlineKeyboardButton(text='Хоккей 🏒', callback_data='sport_hockey')
+    btn3 = types.InlineKeyboardButton(text='Баскетбол 🏀', callback_data='sport_basketball')
+    btn4 = types.InlineKeyboardButton(text='Единоборства 🥋', callback_data='sport_martial_arts')
+    btn5 = types.InlineKeyboardButton(text='Гандбол 🤾', callback_data='sport_handball')
+    btn6 = types.InlineKeyboardButton(text='Теннис 🎾', callback_data='sport_tennis')
+    btn7 = types.InlineKeyboardButton(text='Волейбол 🏐', callback_data='sport_volleyball')
+    btn8 = types.InlineKeyboardButton(text='Плавание 🏊', callback_data='sport_swimming')
+    btn9 = types.InlineKeyboardButton(text='Гимнастика 🤸', callback_data='sport_gymnastics')
+    kb.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9)
     bot.send_message(
         call.message.chat.id,
         '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>',
@@ -555,7 +651,12 @@ def back_to_list(call):
         pass
     section_key = call.data.split('_', 3)[3]
     sport = section_key.split('_')[0]
-    show_sport_sections(chat_id, sport)
+    
+    # Проверяем, из единоборств ли пришли
+    if sport in ['boxing', 'karate']:
+        show_sport_sections(chat_id, sport, parent_sport='martial_arts')
+    else:
+        show_sport_sections(chat_id, sport)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('map_'))
 def send_location(call):
@@ -880,16 +981,9 @@ def admin_back(call):
 @bot.callback_query_handler(func=lambda callback: callback.data)
 def check_callback_data(callback):
     if callback.message:
-        if callback.data == 'btn1':
-            show_sport_sections(callback.message.chat.id, 'football', callback.message.message_id)
-        elif callback.data == 'btn2':
-            show_sport_sections(callback.message.chat.id, 'hockey', callback.message.message_id)
-        elif callback.data == 'btn3':
-            show_sport_sections(callback.message.chat.id, 'basketball', callback.message.message_id)
-        elif callback.data == 'btn4':
-            show_sport_sections(callback.message.chat.id, 'boxing', callback.message.message_id)
-        elif callback.data == 'btn5':
-            show_sport_sections(callback.message.chat.id, 'handball', callback.message.message_id)
+        if callback.data.startswith('sport_'):
+            sport = callback.data.replace('sport_', '')
+            show_sport_sections(callback.message.chat.id, sport, callback.message.message_id)
 
 @bot.message_handler(content_types=['voice', 'photo', 'video'])
 def handle_media(message):
