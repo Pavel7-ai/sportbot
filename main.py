@@ -188,7 +188,7 @@ add_default_admin()
 # ==== ФУНКЦИЯ РАСЧЁТА РАССТОЯНИЯ ====
 def calculate_distance(lat1, lon1, lat2, lon2):
     """Расчёт расстояния между двумя точками на сфере (формула гаверсинусов)"""
-    R = 6371  # Радиус Земли в километрах
+    R = 6371
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
     a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
@@ -208,9 +208,8 @@ bot.set_my_commands([
 
 # ==== ГЛОБАЛЬНЫЕ СЛОВАРИ ====
 user_location_data = {}
-user_review_state = {}      # Для отзывов - хранит словарь {section_key, request_msg_id, error_msg_id}
-user_location_state = {}    # Для поиска рядом - хранит строку с видом спорта
-user_rating_state = {}
+user_review_state = {}
+user_location_state = {}
 
 # ==== ФУНКЦИИ РАБОТЫ С БД ====
 
@@ -303,16 +302,9 @@ def get_section_card_text(section_key):
         return '❌ Секция не найдена'
     
     sport_icons = {
-        'football': '⚽️',
-        'hockey': '🏒',
-        'basketball': '🏀',
-        'boxing': '🥊',
-        'karate': '🥋',
-        'handball': '🤾',
-        'tennis': '🎾',
-        'volleyball': '🏐',
-        'swimming': '🏊',
-        'gymnastics': '🤸'
+        'football': '⚽️', 'hockey': '🏒', 'basketball': '🏀',
+        'boxing': '🥊', 'karate': '🥋', 'handball': '🤾',
+        'tennis': '🎾', 'volleyball': '🏐', 'swimming': '🏊', 'gymnastics': '🤸'
     }
     sport = section_key.split('_')[0]
     icon = sport_icons.get(sport, '🏆')
@@ -337,11 +329,10 @@ def get_section_card_text(section_key):
 
 def section_keyboard(section_key):
     kb = types.InlineKeyboardMarkup(row_width=1)
-    btn1 = types.InlineKeyboardButton(text='📝 Оставить отзыв', callback_data=f'review_{section_key}')
-    btn2 = types.InlineKeyboardButton(text='📖 Все отзывы', callback_data=f'view_reviews_{section_key}')
-    btn3 = types.InlineKeyboardButton(text='🗺️ Показать на карте', callback_data=f'map_{section_key}')
-    btn4 = types.InlineKeyboardButton(text='🔙 Назад к списку', callback_data=f'back_to_list_{section_key}')
-    kb.add(btn1, btn2, btn3, btn4)
+    kb.add(types.InlineKeyboardButton(text='📝 Оставить отзыв', callback_data=f'review_{section_key}'))
+    kb.add(types.InlineKeyboardButton(text='📖 Все отзывы', callback_data=f'view_reviews_{section_key}'))
+    kb.add(types.InlineKeyboardButton(text='🗺️ Показать на карте', callback_data=f'map_{section_key}'))
+    kb.add(types.InlineKeyboardButton(text='🔙 Назад к списку', callback_data=f'back_to_list_{section_key}'))
     return kb
 
 def location_keyboard_with_back_to_card(section_key):
@@ -352,7 +343,6 @@ def location_keyboard_with_back_to_card(section_key):
 # ==================== ФУНКЦИЯ ПОКАЗА СПИСКА СЕКЦИЙ ====================
 
 def show_sport_sections(chat_id, sport, message_id=None, parent_sport=None):
-    """Показывает список секций по виду спорта"""
     conn = get_db_connection()
     cur = conn.cursor()
     
@@ -363,27 +353,13 @@ def show_sport_sections(chat_id, sport, message_id=None, parent_sport=None):
         kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_main'))
         
         if message_id:
-            bot.edit_message_text(
-                '🥋 <b>Выберите вид единоборств:</b>',
-                chat_id,
-                message_id,
-                parse_mode='html',
-                reply_markup=kb
-            )
+            bot.edit_message_text('🥋 <b>Выберите вид единоборств:</b>', chat_id, message_id, parse_mode='html', reply_markup=kb)
         else:
-            bot.send_message(
-                chat_id,
-                '🥋 <b>Выберите вид единоборств:</b>',
-                parse_mode='html',
-                reply_markup=kb
-            )
+            bot.send_message(chat_id, '🥋 <b>Выберите вид единоборств:</b>', parse_mode='html', reply_markup=kb)
         conn.close()
         return
     
-    cur.execute(
-        "SELECT key, name, lat, lon FROM sections WHERE key LIKE ? ORDER BY name",
-        (f'{sport}_%',)
-    )
+    cur.execute("SELECT key, name, lat, lon FROM sections WHERE key LIKE ? ORDER BY name", (f'{sport}_%',))
     sections = cur.fetchall()
     conn.close()
     
@@ -392,25 +368,15 @@ def show_sport_sections(chat_id, sport, message_id=None, parent_sport=None):
         return
     
     sport_icons = {
-        'football': '⚽️',
-        'hockey': '🏒',
-        'basketball': '🏀',
-        'boxing': '🥊',
-        'karate': '🥋',
-        'handball': '🤾',
-        'tennis': '🎾',
-        'volleyball': '🏐',
-        'swimming': '🏊',
-        'gymnastics': '🤸'
+        'football': '⚽️', 'hockey': '🏒', 'basketball': '🏀',
+        'boxing': '🥊', 'karate': '🥋', 'handball': '🤾',
+        'tennis': '🎾', 'volleyball': '🏐', 'swimming': '🏊', 'gymnastics': '🤸'
     }
     icon = sport_icons.get(sport, '🏆')
     
     kb = types.InlineKeyboardMarkup(row_width=1)
     for section in sections:
-        kb.add(types.InlineKeyboardButton(
-            f'{icon} {section["name"]}',
-            callback_data=f'section_{section["key"]}'
-        ))
+        kb.add(types.InlineKeyboardButton(f'{icon} {section["name"]}', callback_data=f'section_{section["key"]}'))
     kb.add(types.InlineKeyboardButton('📍 Найти рядом со мной', callback_data=f'find_near_{sport}'))
     
     if parent_sport == 'martial_arts':
@@ -419,27 +385,15 @@ def show_sport_sections(chat_id, sport, message_id=None, parent_sport=None):
         kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_main'))
     
     if message_id:
-        bot.edit_message_text(
-            f'{icon} <b>Выбери секцию или найди рядом:</b>',
-            chat_id,
-            message_id,
-            parse_mode='html',
-            reply_markup=kb
-        )
+        bot.edit_message_text(f'{icon} <b>Выбери секцию или найди рядом:</b>', chat_id, message_id, parse_mode='html', reply_markup=kb)
     else:
-        bot.send_message(
-            chat_id,
-            f'{icon} <b>Выбери секцию или найди рядом:</b>',
-            parse_mode='html',
-            reply_markup=kb
-        )
+        bot.send_message(chat_id, f'{icon} <b>Выбери секцию или найди рядом:</b>', parse_mode='html', reply_markup=kb)
 
 # ==================== ОБРАБОТЧИКИ ====================
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('find_near_'))
 def ask_location(call):
     sport = call.data.replace('find_near_', '')
-    
     user_location_state[call.message.chat.id] = sport
     
     kb = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
@@ -447,17 +401,11 @@ def ask_location(call):
     kb.add(types.KeyboardButton(text='❌ Отмена'))
     
     bot.delete_message(call.message.chat.id, call.message.message_id)
-    bot.send_message(
-        call.message.chat.id,
-        '📍 Отправьте ваше местоположение, чтобы найти ближайшие секции.\n\n<i>Нажмите на кнопку ниже</i>',
-        parse_mode='html',
-        reply_markup=kb
-    )
+    bot.send_message(call.message.chat.id, '📍 Отправьте ваше местоположение, чтобы найти ближайшие секции.\n\n<i>Нажмите на кнопку ниже</i>', parse_mode='html', reply_markup=kb)
 
 @bot.message_handler(content_types=['location'])
 def handle_location(message):
     chat_id = message.chat.id
-    
     if chat_id not in user_location_state:
         bot.send_message(chat_id, 'Я тебя не понимаю, воспользуйся подсказкой в меню 👇')
         return
@@ -470,19 +418,12 @@ def handle_location(message):
     
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute(
-        "SELECT key, name, lat, lon FROM sections WHERE key LIKE ? AND lat IS NOT NULL AND lon IS NOT NULL",
-        (f'{sport}_%',)
-    )
+    cur.execute("SELECT key, name, lat, lon FROM sections WHERE key LIKE ? AND lat IS NOT NULL AND lon IS NOT NULL", (f'{sport}_%',))
     rows = cur.fetchall()
     conn.close()
     
     if not rows:
-        bot.send_message(
-            chat_id,
-            '❌ Нет секций по выбранному виду спорта с указанными координатами.',
-            reply_markup=types.ReplyKeyboardRemove()
-        )
+        bot.send_message(chat_id, '❌ Нет секций по выбранному виду спорта с указанными координатами.', reply_markup=types.ReplyKeyboardRemove())
         return
     
     sections = []
@@ -501,161 +442,102 @@ def handle_location(message):
     all_sections = sections_with_dist + sections_without_dist
     
     if not all_sections:
-        bot.send_message(
-            chat_id,
-            '❌ Нет секций с указанными координатами.',
-            reply_markup=types.ReplyKeyboardRemove()
-        )
+        bot.send_message(chat_id, '❌ Нет секций с указанными координатами.', reply_markup=types.ReplyKeyboardRemove())
         return
     
     sport_icons = {
-        'football': '⚽️',
-        'hockey': '🏒',
-        'basketball': '🏀',
-        'boxing': '🥊',
-        'karate': '🥋',
-        'handball': '🤾',
-        'tennis': '🎾',
-        'volleyball': '🏐',
-        'swimming': '🏊',
-        'gymnastics': '🤸'
+        'football': '⚽️', 'hockey': '🏒', 'basketball': '🏀',
+        'boxing': '🥊', 'karate': '🥋', 'handball': '🤾',
+        'tennis': '🎾', 'volleyball': '🏐', 'swimming': '🏊', 'gymnastics': '🤸'
     }
     icon = sport_icons.get(sport, '🏆')
     
     text = f'{icon} <b>Ближайшие секции:</b>\n\n'
-    
     kb = types.InlineKeyboardMarkup(row_width=1)
     for section in all_sections[:10]:
         dist_text = f' — {section["distance"]} км' if section['distance'] is not None else ' (координаты не указаны)'
         text += f'• {section["name"]}{dist_text}\n'
-        kb.add(types.InlineKeyboardButton(
-            f'{icon} {section["name"]}',
-            callback_data=f'section_{section["key"]}'
-        ))
+        kb.add(types.InlineKeyboardButton(f'{icon} {section["name"]}', callback_data=f'section_{section["key"]}'))
     
     if sport in ['boxing', 'karate']:
         kb.add(types.InlineKeyboardButton('🔙 Назад к единоборствам', callback_data='back_to_martial_arts'))
     else:
         kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'back_to_sport_{sport}'))
     
-    # Отправляем список секций
-    bot.send_message(
-        chat_id,
-        text,
-        parse_mode='html',
-        reply_markup=kb
-    )
-    
-    # Убираем клавиатуру без лишнего сообщения
-    bot.send_message(
-        chat_id,
-        '',
-        reply_markup=types.ReplyKeyboardRemove()
-    )
+    bot.send_message(chat_id, text, parse_mode='html', reply_markup=kb)
+    bot.send_message(chat_id, '', reply_markup=types.ReplyKeyboardRemove())
 
 @bot.message_handler(func=lambda message: message.text == '❌ Отмена')
 def cancel_location(message):
     chat_id = message.chat.id
-    
     if chat_id in user_location_state:
         del user_location_state[chat_id]
-    
     if chat_id in user_review_state:
         del user_review_state[chat_id]
-    
-    bot.send_message(
-        chat_id,
-        '❌ Поиск отменён.',
-        reply_markup=types.ReplyKeyboardRemove()
-    )
+    bot.send_message(chat_id, '❌ Поиск отменён.', reply_markup=types.ReplyKeyboardRemove())
     start(message)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('back_to_sport_'))
 def back_to_sport(call):
     sport = call.data.replace('back_to_sport_', '')
     chat_id = call.message.chat.id
-    
     try:
         bot.delete_message(chat_id, call.message.message_id)
     except:
         pass
-    
     show_sport_sections(chat_id, sport)
 
 @bot.callback_query_handler(func=lambda call: call.data == 'back_to_martial_arts')
 def back_to_martial_arts(call):
     chat_id = call.message.chat.id
-    
     try:
         bot.delete_message(chat_id, call.message.message_id)
     except:
         pass
-    
     show_sport_sections(chat_id, 'martial_arts')
 
 @bot.message_handler(commands=['start'])
 def start(message):
     get_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
     kb = types.InlineKeyboardMarkup(row_width=2)
-    btn1 = types.InlineKeyboardButton(text='Футбол ⚽️', callback_data='sport_football')
-    btn2 = types.InlineKeyboardButton(text='Хоккей 🏒', callback_data='sport_hockey')
-    btn3 = types.InlineKeyboardButton(text='Баскетбол 🏀', callback_data='sport_basketball')
-    btn4 = types.InlineKeyboardButton(text='Единоборства 🥋', callback_data='sport_martial_arts')
-    btn5 = types.InlineKeyboardButton(text='Гандбол 🤾', callback_data='sport_handball')
-    btn6 = types.InlineKeyboardButton(text='Теннис 🎾', callback_data='sport_tennis')
-    btn7 = types.InlineKeyboardButton(text='Волейбол 🏐', callback_data='sport_volleyball')
-    btn8 = types.InlineKeyboardButton(text='Плавание 🏊', callback_data='sport_swimming')
-    btn9 = types.InlineKeyboardButton(text='Гимнастика 🤸', callback_data='sport_gymnastics')
-    kb.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9)
-    bot.send_message(
-        message.chat.id,
-        '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>',
-        parse_mode='html',
-        reply_markup=kb
-    )
+    kb.add(types.InlineKeyboardButton(text='Футбол ⚽️', callback_data='sport_football'))
+    kb.add(types.InlineKeyboardButton(text='Хоккей 🏒', callback_data='sport_hockey'))
+    kb.add(types.InlineKeyboardButton(text='Баскетбол 🏀', callback_data='sport_basketball'))
+    kb.add(types.InlineKeyboardButton(text='Единоборства 🥋', callback_data='sport_martial_arts'))
+    kb.add(types.InlineKeyboardButton(text='Гандбол 🤾', callback_data='sport_handball'))
+    kb.add(types.InlineKeyboardButton(text='Теннис 🎾', callback_data='sport_tennis'))
+    kb.add(types.InlineKeyboardButton(text='Волейбол 🏐', callback_data='sport_volleyball'))
+    kb.add(types.InlineKeyboardButton(text='Плавание 🏊', callback_data='sport_swimming'))
+    kb.add(types.InlineKeyboardButton(text='Гимнастика 🤸', callback_data='sport_gymnastics'))
+    bot.send_message(message.chat.id, '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>', parse_mode='html', reply_markup=kb)
 
 @bot.callback_query_handler(func=lambda call: call.data == 'back_to_main')
 def back_to_main(call):
     chat_id = call.message.chat.id
-    
     if chat_id in user_location_data:
         del user_location_data[chat_id]
-    
     try:
         bot.delete_message(chat_id, call.message.message_id)
     except:
         pass
-    
     get_user(call.from_user.id, call.from_user.username, call.from_user.first_name)
     kb = types.InlineKeyboardMarkup(row_width=2)
-    btn1 = types.InlineKeyboardButton(text='Футбол ⚽️', callback_data='sport_football')
-    btn2 = types.InlineKeyboardButton(text='Хоккей 🏒', callback_data='sport_hockey')
-    btn3 = types.InlineKeyboardButton(text='Баскетбол 🏀', callback_data='sport_basketball')
-    btn4 = types.InlineKeyboardButton(text='Единоборства 🥋', callback_data='sport_martial_arts')
-    btn5 = types.InlineKeyboardButton(text='Гандбол 🤾', callback_data='sport_handball')
-    btn6 = types.InlineKeyboardButton(text='Теннис 🎾', callback_data='sport_tennis')
-    btn7 = types.InlineKeyboardButton(text='Волейбол 🏐', callback_data='sport_volleyball')
-    btn8 = types.InlineKeyboardButton(text='Плавание 🏊', callback_data='sport_swimming')
-    btn9 = types.InlineKeyboardButton(text='Гимнастика 🤸', callback_data='sport_gymnastics')
-    kb.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9)
-    bot.send_message(
-        chat_id,
-        '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>',
-        parse_mode='html',
-        reply_markup=kb
-    )
+    kb.add(types.InlineKeyboardButton(text='Футбол ⚽️', callback_data='sport_football'))
+    kb.add(types.InlineKeyboardButton(text='Хоккей 🏒', callback_data='sport_hockey'))
+    kb.add(types.InlineKeyboardButton(text='Баскетбол 🏀', callback_data='sport_basketball'))
+    kb.add(types.InlineKeyboardButton(text='Единоборства 🥋', callback_data='sport_martial_arts'))
+    kb.add(types.InlineKeyboardButton(text='Гандбол 🤾', callback_data='sport_handball'))
+    kb.add(types.InlineKeyboardButton(text='Теннис 🎾', callback_data='sport_tennis'))
+    kb.add(types.InlineKeyboardButton(text='Волейбол 🏐', callback_data='sport_volleyball'))
+    kb.add(types.InlineKeyboardButton(text='Плавание 🏊', callback_data='sport_swimming'))
+    kb.add(types.InlineKeyboardButton(text='Гимнастика 🤸', callback_data='sport_gymnastics'))
+    bot.send_message(chat_id, '<b>Добро пожаловать! Я предоставлю тебе всю информацию о спортивных секциях в Тольятти!</b>\n\n<i>Выбери, о какой хочешь узнать:</i>', parse_mode='html', reply_markup=kb)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('section_'))
 def show_section_card(call):
     section_key = call.data.replace('section_', '')
     text = get_section_card_text(section_key)
-    bot.edit_message_text(
-        text,
-        call.message.chat.id,
-        call.message.message_id,
-        parse_mode='html',
-        reply_markup=section_keyboard(section_key)
-    )
+    bot.edit_message_text(text, call.message.chat.id, call.message.message_id, parse_mode='html', reply_markup=section_keyboard(section_key))
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('back_to_list_'))
 def back_to_list(call):
@@ -676,7 +558,6 @@ def back_to_list(call):
         pass
     section_key = call.data.split('_', 3)[3]
     sport = section_key.split('_')[0]
-    
     if sport in ['boxing', 'karate']:
         show_sport_sections(chat_id, sport, parent_sport='martial_arts')
     else:
@@ -723,7 +604,6 @@ def ask_review(call):
     section_key = call.data.split('_', 1)[1]
     chat_id = call.message.chat.id
     
-    # Удаляем сообщение с карточкой
     try:
         bot.delete_message(chat_id, call.message.message_id)
     except:
@@ -739,50 +619,13 @@ def ask_review(call):
         reply_markup=kb
     )
     
-    # Сохраняем ID сообщения с запросом отзыва
-    user_review_state[chat_id] = {
-        'section_key': section_key, 
-        'request_msg_id': msg.message_id,
-        'error_msg_id': None
-    }
-    
+    user_review_state[chat_id] = {'section_key': section_key}
     bot.register_next_step_handler(msg, save_review_with_rating, section_key)
 
 def save_review_with_rating(message, section_key):
     chat_id = message.chat.id
-    
-    # Если пользователь нажал "Назад" - обрабатываем отдельно
-    if message.text == '🔙 Назад':
-        # Удаляем всё, что связано с отзывом
-        if chat_id in user_review_state:
-            # Удаляем сообщение с запросом
-            if user_review_state[chat_id].get('request_msg_id'):
-                try:
-                    bot.delete_message(chat_id, user_review_state[chat_id]['request_msg_id'])
-                except:
-                    pass
-            # Удаляем сообщение с ошибкой
-            if user_review_state[chat_id].get('error_msg_id'):
-                try:
-                    bot.delete_message(chat_id, user_review_state[chat_id]['error_msg_id'])
-                except:
-                    pass
-            del user_review_state[chat_id]
-        
-        # Удаляем сообщение пользователя
-        try:
-            bot.delete_message(chat_id, message.message_id)
-        except:
-            pass
-        
-        # Показываем карточку
-        text = get_section_card_text(section_key)
-        bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
-        return
-    
     text = message.text
     
-    # Пытаемся найти оценку в формате (5) или 5 в конце
     match = re.search(r'\((\d)\)', text)
     if match:
         rating = int(match.group(1))
@@ -793,134 +636,79 @@ def save_review_with_rating(message, section_key):
             rating = int(match2.group(1))
             comment = text.replace(str(rating), '').strip()
         else:
-            # Ошибка - не найдена оценка
-            # Удаляем сообщение пользователя
             try:
                 bot.delete_message(chat_id, message.message_id)
             except:
                 pass
             
-            kb = types.InlineKeyboardMarkup()
-            kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'cancel_review_{section_key}'))
-            
-            # Отправляем сообщение с ошибкой
-            msg = bot.send_message(
-                chat_id,
-                '❌ Не удалось найти оценку (1-5). Напишите отзыв с оценкой, например:\n"Отличная секция! (5)"\n\n<i>Или нажмите "Назад", чтобы вернуться</i>',
-                parse_mode='html',
-                reply_markup=kb
-            )
-            
-            # Сохраняем ID сообщения с ошибкой
             if chat_id in user_review_state:
-                user_review_state[chat_id]['error_msg_id'] = msg.message_id
+                try:
+                    bot.delete_message(chat_id, message.message_id - 1)
+                except:
+                    pass
+                del user_review_state[chat_id]
             
-            # Снова ждём ответ
-            bot.register_next_step_handler(msg, save_review_with_rating, section_key)
+            text_card = get_section_card_text(section_key)
+            bot.send_message(chat_id, '❌ Не удалось найти оценку (1-5). Напишите отзыв с оценкой, например: "Отличная секция! (5)"')
+            bot.send_message(chat_id, text_card, parse_mode='html', reply_markup=section_keyboard(section_key))
             return
     
-    # Проверяем рейтинг
     if rating < 1 or rating > 5:
         try:
             bot.delete_message(chat_id, message.message_id)
         except:
             pass
         
-        kb = types.InlineKeyboardMarkup()
-        kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'cancel_review_{section_key}'))
-        
-        msg = bot.send_message(
-            chat_id,
-            '❌ Оценка должна быть от 1 до 5!\n\n<i>Напишите отзыв с оценкой, например: "Отличная секция! (5)"</i>',
-            parse_mode='html',
-            reply_markup=kb
-        )
-        
-        # Сохраняем ID сообщения с ошибкой
         if chat_id in user_review_state:
-            user_review_state[chat_id]['error_msg_id'] = msg.message_id
+            try:
+                bot.delete_message(chat_id, message.message_id - 1)
+            except:
+                pass
+            del user_review_state[chat_id]
         
-        bot.register_next_step_handler(msg, save_review_with_rating, section_key)
+        text_card = get_section_card_text(section_key)
+        bot.send_message(chat_id, '❌ Оценка должна быть от 1 до 5!')
+        bot.send_message(chat_id, text_card, parse_mode='html', reply_markup=section_keyboard(section_key))
         return
     
-    # ==== ВСЁ ПРАВИЛЬНО! УДАЛЯЕМ ВСЁ ====
-    
-    # 1. Удаляем сообщение с запросом отзыва
-    if chat_id in user_review_state:
-        if user_review_state[chat_id].get('request_msg_id'):
-            try:
-                bot.delete_message(chat_id, user_review_state[chat_id]['request_msg_id'])
-            except:
-                pass
-        # 2. Удаляем сообщение с ошибкой (если было)
-        if user_review_state[chat_id].get('error_msg_id'):
-            try:
-                bot.delete_message(chat_id, user_review_state[chat_id]['error_msg_id'])
-            except:
-                pass
-    
-    # 3. Удаляем сообщение пользователя с отзывом
+    try:
+        bot.delete_message(chat_id, message.message_id - 1)
+    except:
+        pass
     try:
         bot.delete_message(chat_id, message.message_id)
     except:
         pass
     
-    # 4. Очищаем состояние
     if chat_id in user_review_state:
         del user_review_state[chat_id]
     
-    # Сохраняем отзыв
     result = save_review_to_db(section_key, message.from_user.id, rating, comment)
     
     if result == 'error':
-        bot.send_message(
-            chat_id,
-            '❌ Ошибка при сохранении отзыва. Попробуйте ещё раз.'
-        )
+        bot.send_message(chat_id, '❌ Ошибка при сохранении отзыва.')
         return
     
-    # Показываем карточку с обновлённым рейтингом
     if result == 'updated':
         text_result = f'✅ Ваш отзыв обновлён! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
     else:
         text_result = f'✅ Спасибо за ваш отзыв! (⭐ {rating})\n\n{get_section_card_text(section_key)}'
     
-    bot.send_message(
-        chat_id,
-        text_result,
-        parse_mode='html',
-        reply_markup=section_keyboard(section_key)
-    )
+    bot.send_message(chat_id, text_result, parse_mode='html', reply_markup=section_keyboard(section_key))
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('cancel_review_'))
 def cancel_review(call):
     section_key = call.data.split('_', 2)[2]
     chat_id = call.message.chat.id
     
-    # Удаляем сообщение с ошибкой (на котором нажали "Назад")
     try:
         bot.delete_message(chat_id, call.message.message_id)
     except:
         pass
     
-    # Удаляем все связанные сообщения
     if chat_id in user_review_state:
-        # Удаляем сообщение с запросом
-        if user_review_state[chat_id].get('request_msg_id'):
-            try:
-                bot.delete_message(chat_id, user_review_state[chat_id]['request_msg_id'])
-            except:
-                pass
-        # Удаляем сообщение с ошибкой (если оно есть и это не текущее)
-        error_msg_id = user_review_state[chat_id].get('error_msg_id')
-        if error_msg_id and error_msg_id != call.message.message_id:
-            try:
-                bot.delete_message(chat_id, error_msg_id)
-            except:
-                pass
         del user_review_state[chat_id]
     
-    # Показываем карточку
     text = get_section_card_text(section_key)
     bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
 
@@ -932,7 +720,6 @@ def view_reviews(call):
     chat_id = call.message.chat.id
     
     bot.delete_message(chat_id, call.message.message_id)
-    
     reviews = get_reviews(section_key)
     
     if not reviews:
@@ -966,81 +753,46 @@ def admin_panel(message):
     section = get_section_data(section_key)
     
     kb = types.InlineKeyboardMarkup(row_width=1)
-    kb.add(
-        types.InlineKeyboardButton('✏️ Редактировать название', callback_data=f'admin_edit_name_{section_key}'),
-        types.InlineKeyboardButton('📍 Редактировать адрес', callback_data=f'admin_edit_address_{section_key}'),
-        types.InlineKeyboardButton('📞 Редактировать телефон', callback_data=f'admin_edit_phone_{section_key}'),
-        types.InlineKeyboardButton('🔗 Редактировать ссылку', callback_data=f'admin_edit_link_{section_key}'),
-        types.InlineKeyboardButton('📊 Статистика секции', callback_data=f'admin_stats_{section_key}'),
-        types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_main')
-    )
+    kb.add(types.InlineKeyboardButton('✏️ Редактировать название', callback_data=f'admin_edit_name_{section_key}'))
+    kb.add(types.InlineKeyboardButton('📍 Редактировать адрес', callback_data=f'admin_edit_address_{section_key}'))
+    kb.add(types.InlineKeyboardButton('📞 Редактировать телефон', callback_data=f'admin_edit_phone_{section_key}'))
+    kb.add(types.InlineKeyboardButton('🔗 Редактировать ссылку', callback_data=f'admin_edit_link_{section_key}'))
+    kb.add(types.InlineKeyboardButton('📊 Статистика секции', callback_data=f'admin_stats_{section_key}'))
+    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_main'))
     
-    bot.send_message(
-        message.chat.id,
-        f'👑 <b>Панель администратора</b>\n\n<i>Вы управляете секцией:</i>\n<b>{section["name"]}</b>',
-        parse_mode='html',
-        reply_markup=kb
-    )
+    bot.send_message(message.chat.id, f'👑 <b>Панель администратора</b>\n\n<i>Вы управляете секцией:</i>\n<b>{section["name"]}</b>', parse_mode='html', reply_markup=kb)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_edit_name_'))
 def admin_edit_name(call):
     section_key = call.data.replace('admin_edit_name_', '')
     user_review_state[call.message.chat.id] = f'edit_name_{section_key}'
-    
     kb = types.InlineKeyboardMarkup()
     kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'admin_back_{section_key}'))
-    
-    bot.edit_message_text(
-        '📝 Введите новое название секции:',
-        call.message.chat.id,
-        call.message.message_id,
-        reply_markup=kb
-    )
+    bot.edit_message_text('📝 Введите новое название секции:', call.message.chat.id, call.message.message_id, reply_markup=kb)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_edit_address_'))
 def admin_edit_address(call):
     section_key = call.data.replace('admin_edit_address_', '')
     user_review_state[call.message.chat.id] = f'edit_address_{section_key}'
-    
     kb = types.InlineKeyboardMarkup()
     kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'admin_back_{section_key}'))
-    
-    bot.edit_message_text(
-        '📍 Введите новый адрес секции:',
-        call.message.chat.id,
-        call.message.message_id,
-        reply_markup=kb
-    )
+    bot.edit_message_text('📍 Введите новый адрес секции:', call.message.chat.id, call.message.message_id, reply_markup=kb)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_edit_phone_'))
 def admin_edit_phone(call):
     section_key = call.data.replace('admin_edit_phone_', '')
     user_review_state[call.message.chat.id] = f'edit_phone_{section_key}'
-    
     kb = types.InlineKeyboardMarkup()
     kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'admin_back_{section_key}'))
-    
-    bot.edit_message_text(
-        '📞 Введите новый телефон секции:',
-        call.message.chat.id,
-        call.message.message_id,
-        reply_markup=kb
-    )
+    bot.edit_message_text('📞 Введите новый телефон секции:', call.message.chat.id, call.message.message_id, reply_markup=kb)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_edit_link_'))
 def admin_edit_link(call):
     section_key = call.data.replace('admin_edit_link_', '')
     user_review_state[call.message.chat.id] = f'edit_link_{section_key}'
-    
     kb = types.InlineKeyboardMarkup()
     kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data=f'admin_back_{section_key}'))
-    
-    bot.edit_message_text(
-        '🔗 Введите новую ссылку секции:',
-        call.message.chat.id,
-        call.message.message_id,
-        reply_markup=kb
-    )
+    bot.edit_message_text('🔗 Введите новую ссылку секции:', call.message.chat.id, call.message.message_id, reply_markup=kb)
 
 @bot.message_handler(func=lambda message: message.chat.id in user_review_state)
 def save_admin_edit(message):
@@ -1048,12 +800,10 @@ def save_admin_edit(message):
     parts = state.split('_', 2)
     action = parts[0] + '_' + parts[1]
     section_key = parts[2]
-    
     new_value = message.text
     
     conn = get_db_connection()
     cur = conn.cursor()
-    
     if action == 'edit_name':
         cur.execute("UPDATE sections SET name = ? WHERE key = ?", (new_value, section_key))
     elif action == 'edit_address':
@@ -1062,26 +812,17 @@ def save_admin_edit(message):
         cur.execute("UPDATE sections SET phone = ? WHERE key = ?", (new_value, section_key))
     elif action == 'edit_link':
         cur.execute("UPDATE sections SET link = ? WHERE key = ?", (new_value, section_key))
-    
     conn.commit()
     conn.close()
-    
     del user_review_state[message.chat.id]
     
     kb = types.InlineKeyboardMarkup()
     kb.add(types.InlineKeyboardButton('🔙 Назад в панель', callback_data=f'admin_back_{section_key}'))
-    
-    bot.send_message(
-        message.chat.id,
-        f'✅ Данные обновлены!\n\n{get_section_card_text(section_key)}',
-        parse_mode='html',
-        reply_markup=kb
-    )
+    bot.send_message(message.chat.id, f'✅ Данные обновлены!\n\n{get_section_card_text(section_key)}', parse_mode='html', reply_markup=kb)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_stats_'))
 def admin_stats(call):
     section_key = call.data.replace('admin_stats_', '')
-    
     reviews = get_reviews(section_key)
     rating_data = get_section_rating(section_key)
     
@@ -1089,7 +830,6 @@ def admin_stats(call):
     text += f'⭐ Средний рейтинг: {rating_data["rating"]:.1f}\n'
     text += f'📝 Всего отзывов: {rating_data["count"]}\n\n'
     text += f'📖 <b>Последние отзывы:</b>\n'
-    
     if reviews:
         for rev in reviews[:3]:
             text += f'⭐ {rev["rating"]} — {rev["comment"]}\n'
@@ -1098,47 +838,30 @@ def admin_stats(call):
     
     kb = types.InlineKeyboardMarkup()
     kb.add(types.InlineKeyboardButton('🔙 Назад в панель', callback_data=f'admin_back_{section_key}'))
-    
-    bot.edit_message_text(
-        text,
-        call.message.chat.id,
-        call.message.message_id,
-        parse_mode='html',
-        reply_markup=kb
-    )
+    bot.edit_message_text(text, call.message.chat.id, call.message.message_id, parse_mode='html', reply_markup=kb)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('admin_back_'))
 def admin_back(call):
     section_key = call.data.replace('admin_back_', '')
-    
     section = get_section_data(section_key)
     
     kb = types.InlineKeyboardMarkup(row_width=1)
-    kb.add(
-        types.InlineKeyboardButton('✏️ Редактировать название', callback_data=f'admin_edit_name_{section_key}'),
-        types.InlineKeyboardButton('📍 Редактировать адрес', callback_data=f'admin_edit_address_{section_key}'),
-        types.InlineKeyboardButton('📞 Редактировать телефон', callback_data=f'admin_edit_phone_{section_key}'),
-        types.InlineKeyboardButton('🔗 Редактировать ссылку', callback_data=f'admin_edit_link_{section_key}'),
-        types.InlineKeyboardButton('📊 Статистика секции', callback_data=f'admin_stats_{section_key}'),
-        types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_main')
-    )
+    kb.add(types.InlineKeyboardButton('✏️ Редактировать название', callback_data=f'admin_edit_name_{section_key}'))
+    kb.add(types.InlineKeyboardButton('📍 Редактировать адрес', callback_data=f'admin_edit_address_{section_key}'))
+    kb.add(types.InlineKeyboardButton('📞 Редактировать телефон', callback_data=f'admin_edit_phone_{section_key}'))
+    kb.add(types.InlineKeyboardButton('🔗 Редактировать ссылку', callback_data=f'admin_edit_link_{section_key}'))
+    kb.add(types.InlineKeyboardButton('📊 Статистика секции', callback_data=f'admin_stats_{section_key}'))
+    kb.add(types.InlineKeyboardButton('🔙 Назад', callback_data='back_to_main'))
     
-    bot.edit_message_text(
-        f'👑 <b>Панель администратора</b>\n\n<i>Вы управляете секцией:</i>\n<b>{section["name"]}</b>',
-        call.message.chat.id,
-        call.message.message_id,
-        parse_mode='html',
-        reply_markup=kb
-    )
+    bot.edit_message_text(f'👑 <b>Панель администратора</b>\n\n<i>Вы управляете секцией:</i>\n<b>{section["name"]}</b>', call.message.chat.id, call.message.message_id, parse_mode='html', reply_markup=kb)
 
 # ==================== ОСНОВНОЙ ОБРАБОТЧИК ====================
 
 @bot.callback_query_handler(func=lambda callback: callback.data)
 def check_callback_data(callback):
-    if callback.message:
-        if callback.data.startswith('sport_'):
-            sport = callback.data.replace('sport_', '')
-            show_sport_sections(callback.message.chat.id, sport, callback.message.message_id)
+    if callback.message and callback.data.startswith('sport_'):
+        sport = callback.data.replace('sport_', '')
+        show_sport_sections(callback.message.chat.id, sport, callback.message.message_id)
 
 @bot.message_handler(content_types=['voice', 'photo', 'video'])
 def handle_media(message):
