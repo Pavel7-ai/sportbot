@@ -753,14 +753,29 @@ def save_review_with_rating(message, section_key):
     
     # Если пользователь нажал "Назад" - обрабатываем отдельно
     if message.text == '🔙 Назад':
+        # Удаляем всё, что связано с отзывом
         if chat_id in user_review_state:
-            # Удаляем сообщение с ошибкой, если оно есть
+            # Удаляем сообщение с запросом
+            if user_review_state[chat_id].get('request_msg_id'):
+                try:
+                    bot.delete_message(chat_id, user_review_state[chat_id]['request_msg_id'])
+                except:
+                    pass
+            # Удаляем сообщение с ошибкой
             if user_review_state[chat_id].get('error_msg_id'):
                 try:
                     bot.delete_message(chat_id, user_review_state[chat_id]['error_msg_id'])
                 except:
                     pass
             del user_review_state[chat_id]
+        
+        # Удаляем сообщение пользователя
+        try:
+            bot.delete_message(chat_id, message.message_id)
+        except:
+            pass
+        
+        # Показываем карточку
         text = get_section_card_text(section_key)
         bot.send_message(chat_id, text, parse_mode='html', reply_markup=section_keyboard(section_key))
         return
@@ -828,34 +843,34 @@ def save_review_with_rating(message, section_key):
         bot.register_next_step_handler(msg, save_review_with_rating, section_key)
         return
     
-    # Удаляем сообщение с запросом отзыва (сохраняли его ID)
-    if chat_id in user_review_state and isinstance(user_review_state[chat_id], dict):
-        request_msg_id = user_review_state[chat_id].get('request_msg_id')
-        if request_msg_id:
+    # ==== ВСЁ ПРАВИЛЬНО! УДАЛЯЕМ ВСЁ ====
+    
+    # 1. Удаляем сообщение с запросом отзыва
+    if chat_id in user_review_state:
+        if user_review_state[chat_id].get('request_msg_id'):
             try:
-                bot.delete_message(chat_id, request_msg_id)
+                bot.delete_message(chat_id, user_review_state[chat_id]['request_msg_id'])
             except:
                 pass
-        
-        # Удаляем сообщение с ошибкой, если оно есть
-        error_msg_id = user_review_state[chat_id].get('error_msg_id')
-        if error_msg_id:
+        # 2. Удаляем сообщение с ошибкой (если было)
+        if user_review_state[chat_id].get('error_msg_id'):
             try:
-                bot.delete_message(chat_id, error_msg_id)
+                bot.delete_message(chat_id, user_review_state[chat_id]['error_msg_id'])
             except:
                 pass
     
-    # Удаляем сообщение пользователя с отзывом
+    # 3. Удаляем сообщение пользователя с отзывом
     try:
         bot.delete_message(chat_id, message.message_id)
     except:
         pass
     
-    # Сохраняем отзыв
-    result = save_review_to_db(section_key, message.from_user.id, rating, comment)
-    
+    # 4. Очищаем состояние
     if chat_id in user_review_state:
         del user_review_state[chat_id]
+    
+    # Сохраняем отзыв
+    result = save_review_to_db(section_key, message.from_user.id, rating, comment)
     
     if result == 'error':
         bot.send_message(
@@ -888,25 +903,21 @@ def cancel_review(call):
     except:
         pass
     
-    # Если есть сохранённые сообщения - удаляем их
-    if chat_id in user_review_state and isinstance(user_review_state[chat_id], dict):
-        # Удаляем сообщение с запросом отзыва
-        request_msg_id = user_review_state[chat_id].get('request_msg_id')
-        if request_msg_id:
+    # Удаляем все связанные сообщения
+    if chat_id in user_review_state:
+        # Удаляем сообщение с запросом
+        if user_review_state[chat_id].get('request_msg_id'):
             try:
-                bot.delete_message(chat_id, request_msg_id)
+                bot.delete_message(chat_id, user_review_state[chat_id]['request_msg_id'])
             except:
                 pass
-        
-        # Удаляем сообщение с ошибкой (если оно есть и это не текущее сообщение)
+        # Удаляем сообщение с ошибкой (если оно есть и это не текущее)
         error_msg_id = user_review_state[chat_id].get('error_msg_id')
         if error_msg_id and error_msg_id != call.message.message_id:
             try:
                 bot.delete_message(chat_id, error_msg_id)
             except:
                 pass
-    
-    if chat_id in user_review_state:
         del user_review_state[chat_id]
     
     # Показываем карточку
